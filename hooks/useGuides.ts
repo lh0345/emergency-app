@@ -1,0 +1,34 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { useDatabase } from '@/db/context';
+import * as Q from '@/db/queries';
+import type { GuideRow } from '@/types';
+
+export function useGuides(query?: string) {
+  const { db, ready } = useDatabase();
+  const [guides, setGuides] = useState<GuideRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!db) return;
+    setLoading(true);
+    const rows = await Q.listGuides(db, query);
+    setGuides(rows);
+    setLoading(false);
+  }, [db, query]);
+
+  useEffect(() => {
+    if (ready && db) void refresh();
+  }, [ready, db, refresh]);
+
+  const setBookmarked = useCallback(
+    async (id: number, bookmarked: boolean) => {
+      if (!db) return;
+      await Q.setGuideBookmarked(db, id, bookmarked);
+      await refresh();
+    },
+    [db, refresh]
+  );
+
+  return { guides, loading, refresh, setBookmarked };
+}
