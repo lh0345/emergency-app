@@ -11,9 +11,7 @@ export default function ContactsStackLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.surfaceElevated },
-        headerTintColor: theme.text,
-        headerTitleStyle: { fontWeight: '700', fontSize: 18 },
+        headerShown: false,
         contentStyle: { backgroundColor: theme.surface },
       }}
     >

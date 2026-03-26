@@ -1,13 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmergencyChecklistItem } from '@/components/emergency/EmergencyChecklistItem';
 import { AppButton } from '@/components/ui/AppButton';
+import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
-import { spacing } from '@/constants/spacing';
+import { screenPadding } from '@/constants/layout';
+import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
@@ -44,6 +46,9 @@ export default function EmergencyChecklistScreen() {
     if (ready) void load();
   }, [ready, load]);
 
+  const doneCount = useMemo(() => items.filter((i) => i.done).length, [items]);
+  const total = items.length;
+
   const toggle = async (id: number, done: boolean) => {
     if (!db) return;
     await Q.setChecklistItemDone(db, id, !done);
@@ -57,24 +62,51 @@ export default function EmergencyChecklistScreen() {
 
   if (!sessionId) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: theme.surface }]}>
-        <AppText>No active checklist.</AppText>
-        <AppButton title="Home" onPress={() => router.replace('/')} />
-      </SafeAreaView>
+      <Screen variant="modal" back title="Checklist">
+        <View style={styles.empty}>
+          <AppText variant="subtitle" style={{ color: theme.text }}>
+            No active checklist.
+          </AppText>
+          <AppButton title="Home" onPress={() => router.replace('/')} style={styles.emptyBtn} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.surface }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
-          Checklist
-        </AppText>
-        <AppText muted style={{ marginBottom: spacing.lg }}>
-          Tap an item when done.
-        </AppText>
+    <Screen variant="modal" back title="Checklist">
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: theme.emergencyBanner,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={styles.heroTop}>
+            <View style={[styles.heroIcon, { backgroundColor: theme.emergencyMuted }]}>
+              <Ionicons name="checkbox-outline" size={26} color={theme.accent} />
+            </View>
+            {!loading && total > 0 ? (
+              <View style={[styles.pill, { backgroundColor: theme.emergencyMuted }]}>
+                <AppText variant="label" style={{ color: theme.accent, fontSize: 13 }}>
+                  {doneCount} of {total} done
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+          <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
+            Your checklist
+          </AppText>
+          <AppText muted variant="caption" style={styles.heroSub}>
+            Tap each line when you have completed it. You can return home when you are finished.
+          </AppText>
+        </View>
+
         {loading ? (
-          <ActivityIndicator color={theme.accent} />
+          <ActivityIndicator color={theme.accent} style={styles.loader} />
         ) : (
           items.map((it) => (
             <EmergencyChecklistItem
@@ -86,12 +118,44 @@ export default function EmergencyChecklistScreen() {
         )}
         <AppButton title="Done — return home" onPress={finish} style={styles.done} />
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  done: { marginTop: spacing.lg },
+  scroll: {
+    paddingHorizontal: screenPadding,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
+  },
+  empty: { flex: 1, padding: spacing.lg, justifyContent: 'center' },
+  emptyBtn: { marginTop: spacing.lg },
+  hero: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  heroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+  },
+  heroTitle: { marginBottom: spacing.sm },
+  heroSub: { lineHeight: 20 },
+  loader: { marginVertical: spacing.xl },
+  done: { marginTop: spacing.md },
 });

@@ -4,7 +4,6 @@ import React from 'react';
 
 import { getThemeColors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -20,10 +19,7 @@ export default function TabLayout() {
           backgroundColor: theme.surfaceElevated,
           borderTopColor: theme.border,
         },
-        headerStyle: { backgroundColor: theme.surfaceElevated },
-        headerTintColor: theme.text,
-        headerTitleStyle: { fontWeight: '700', fontSize: 18 },
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -38,7 +34,6 @@ export default function TabLayout() {
         options={{
           title: 'Plans',
           tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />,
-          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -46,7 +41,6 @@ export default function TabLayout() {
         options={{
           title: 'Supplies',
           tabBarIcon: ({ color, size }) => <Ionicons name="cube" color={color} size={size} />,
-          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -54,7 +48,6 @@ export default function TabLayout() {
         options={{
           title: 'Library',
           tabBarIcon: ({ color, size }) => <Ionicons name="book" color={color} size={size} />,
-          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -62,7 +55,6 @@ export default function TabLayout() {
         options={{
           title: 'Contacts',
           tabBarIcon: ({ color, size }) => <Ionicons name="people" color={color} size={size} />,
-          headerShown: false,
         }}
       />
     </Tabs>

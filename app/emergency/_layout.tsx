@@ -11,9 +11,7 @@ export default function EmergencyLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.surfaceElevated },
-        headerTintColor: theme.text,
-        headerTitleStyle: { fontWeight: '800', fontSize: 20 },
+        headerShown: false,
         contentStyle: { backgroundColor: theme.surface },
       }}
     >

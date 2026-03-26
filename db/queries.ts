@@ -361,9 +361,26 @@ export async function replaceEmergencyChecklist(
 
 // --- Guides ---
 
-export async function listGuides(db: SQLite.SQLiteDatabase, query?: string): Promise<GuideRow[]> {
-  if (query && query.trim()) {
-    const q = `%${query.trim()}%`;
+export async function listGuides(
+  db: SQLite.SQLiteDatabase,
+  query?: string,
+  bookmarkedOnly?: boolean
+): Promise<GuideRow[]> {
+  const search = query?.trim();
+  if (search && bookmarkedOnly) {
+    const q = `%${search}%`;
+    return await db.getAllAsync<GuideRow>(
+      `SELECT * FROM guides WHERE bookmarked = 1 AND (title LIKE ? OR overview LIKE ? OR category LIKE ?) ORDER BY title ASC`,
+      [q, q, q]
+    );
+  }
+  if (bookmarkedOnly) {
+    return await db.getAllAsync<GuideRow>(
+      'SELECT * FROM guides WHERE bookmarked = 1 ORDER BY title ASC'
+    );
+  }
+  if (search) {
+    const q = `%${search}%`;
     return await db.getAllAsync<GuideRow>(
       'SELECT * FROM guides WHERE title LIKE ? OR overview LIKE ? OR category LIKE ? ORDER BY title ASC',
       [q, q, q]

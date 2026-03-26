@@ -1,17 +1,24 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/ui/AppButton';
 import { AppInput } from '@/components/ui/AppInput';
+import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
-import { spacing } from '@/constants/spacing';
+import { screenPadding } from '@/constants/layout';
+import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useContacts } from '@/hooks/useContacts';
 import type { ContactRow } from '@/types';
 
 const TYPES: ContactRow['type'][] = ['emergency', 'family', 'out_of_town', 'other'];
+
+function typeLabel(t: ContactRow['type']) {
+  return t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function AddContactScreen() {
   const router = useRouter();
@@ -44,12 +51,36 @@ export default function AddContactScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: theme.surface }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <AppText variant="label">Name</AppText>
+    <Screen back title="Add contact">
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: theme.surface }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: theme.contactsBanner,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
+            <Ionicons name="person-add" size={28} color={theme.contactsAccent} />
+          </View>
+          <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
+            Add a contact
+          </AppText>
+          <AppText muted variant="caption" style={{ lineHeight: 20 }}>
+            Name and phone are required. Type helps you sort who to call first.
+          </AppText>
+        </View>
+
+        <AppText variant="label" style={{ color: theme.text }}>
+          Name
+        </AppText>
         <AppInput value={name} onChangeText={setName} />
         <AppText variant="label" style={styles.label}>
           Phone
@@ -66,15 +97,21 @@ export default function AddContactScreen() {
               <Pressable
                 key={t}
                 onPress={() => setType(t)}
-                style={[
+                style={({ pressed }) => [
                   styles.chip,
                   {
-                    borderColor: selected ? theme.accent : theme.border,
-                    backgroundColor: selected ? theme.surfaceElevated : 'transparent',
+                    minHeight: minTouchTarget,
+                    borderColor: selected ? theme.contactsAccent : theme.border,
+                    backgroundColor: selected ? theme.contactsMuted : 'transparent',
+                    opacity: pressed ? 0.92 : 1,
                   },
                 ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
               >
-                <AppText style={{ fontSize: 13 }}>{t.replace('_', ' ')}</AppText>
+                <AppText style={{ fontSize: 14, color: theme.text, fontWeight: selected ? '600' : '400' }}>
+                  {typeLabel(t)}
+                </AppText>
               </Pressable>
             );
           })}
@@ -97,21 +134,35 @@ export default function AddContactScreen() {
         />
 
         <AppButton title="Save contact" loading={saving} onPress={() => void save()} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: spacing.lg, gap: spacing.xs },
+  scroll: { paddingHorizontal: screenPadding, paddingBottom: spacing.xxl, gap: spacing.xs },
+  hero: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  heroIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
   label: { marginTop: spacing.md, marginBottom: spacing.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     borderWidth: 2,
-    borderRadius: 999,
+    borderRadius: radius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    minHeight: 44,
     justifyContent: 'center',
   },
 });

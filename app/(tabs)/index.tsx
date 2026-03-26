@@ -1,102 +1,85 @@
-import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { ScenarioCard } from '@/components/emergency/ScenarioCard';
-import { AppBadge } from '@/components/ui/AppBadge';
-import { AppButton } from '@/components/ui/AppButton';
-import { AppText } from '@/components/ui/AppText';
-import { SectionTitle } from '@/components/ui/SectionTitle';
-import { getThemeColors } from '@/constants/Colors';
-import { SCENARIOS } from '@/constants/scenarios';
-import { spacing } from '@/constants/spacing';
+import { Screen } from '@/components/ui/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useOfflineStatus } from '@/hooks/useOfflineStatus';
+import { getThemeColors } from '@/constants/Colors';
 import { useEmergencyMode } from '@/hooks/useEmergencyMode';
-import { emergencyCopy } from '@/utils/emergencyText';
+
+const HOLD_MS = 700;
 
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
-  const { offline, unknown } = useOfflineStatus();
-  const { openEmergencyHome, openScenario } = useEmergencyMode();
-  const router = useRouter();
-
-  const scenarios = SCENARIOS.slice(0, 6);
+  const { openEmergencyHome } = useEmergencyMode();
+  const { width, height } = useWindowDimensions();
+  const shortSide = Math.min(width, height);
+  const diameter = shortSide > 0 ? Math.max(160, shortSide * 0.9) : 280;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.surface }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.header}>
-          <AppText variant="title" style={{ color: theme.text }}>
-            Emergency
-          </AppText>
-          <View style={styles.badges}>
-            {offline || unknown ? (
-              <AppBadge text={unknown ? 'Network unknown' : emergencyCopy.offline} tone="warning" />
-            ) : null}
+    <Screen>
+      <View style={styles.center}>
+        <Pressable
+          onLongPress={openEmergencyHome}
+          accessibilityLabel="Emergency. Press and hold to open emergency mode."	
+          accessibilityHint={`Hold for about ${Math.round(HOLD_MS / 100) / 10} seconds.`}
+          accessibilityRole="button"
+          delayLongPress={HOLD_MS}
+          style={({ pressed }) => [
+            styles.circle,
+            {
+              width: diameter,
+              height: diameter,
+              borderRadius: diameter / 2,
+              backgroundColor: pressed ? '#b91c1c' : '#dc2626',
+              opacity: pressed ? 0.95 : 1,
+            },
+          ]}
+        >
+          <View style={styles.circleContent} collapsable={false}>
+            <Text style={styles.labelEmergency}>Emergency Button</Text>
+            <Text style={styles.labelPressHold}>press and hold</Text>
           </View>
-          <AppText muted style={styles.sub}>
-            {emergencyCopy.savedOnDevice}
-          </AppText>
-        </View>
-
-        <AppButton
-          title={emergencyCopy.emergencyMode}
-          onPress={openEmergencyHome}
-          style={styles.cta}
-          accessibilityLabel={emergencyCopy.emergencyMode}
-        />
-
-        <SectionTitle>Scenarios</SectionTitle>
-        {scenarios.map((s) => (
-          <ScenarioCard key={s.id} scenario={s} onPress={() => openScenario(s.id)} />
-        ))}
-
-        <SectionTitle>Quick open</SectionTitle>
-        <View style={styles.quick}>
-          {(
-            [
-              ['Plans', '/plans'],
-              ['Supplies', '/supplies'],
-              ['Library', '/library'],
-              ['Contacts', '/contacts'],
-            ] as const
-          ).map(([label, href]) => (
-            <Pressable
-              key={href}
-              onPress={() => router.push(href)}
-              style={({ pressed }) => [
-                styles.quickBtn,
-                { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${label}`}
-            >
-              <AppText variant="label">{label}</AppText>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </Pressable>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  header: { marginBottom: spacing.lg },
-  badges: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, flexWrap: 'wrap' },
-  sub: { marginTop: spacing.xs },
-  cta: { marginBottom: spacing.xl },
-  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  quickBtn: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 48,
+  center: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  circle: {
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 14,
+  },
+  circleContent: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  labelPressHold: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  labelEmergency: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '700',
   },
 });

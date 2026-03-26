@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -11,10 +12,13 @@ import {
 } from 'react-native';
 
 import { AppButton } from '@/components/ui/AppButton';
+import { AppCard } from '@/components/ui/AppCard';
 import { AppInput } from '@/components/ui/AppInput';
+import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
-import { spacing } from '@/constants/spacing';
+import { screenPadding } from '@/constants/layout';
+import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
@@ -22,6 +26,10 @@ import { openDialer, openSms } from '@/utils/linking';
 import type { ContactRow } from '@/types';
 
 const TYPES: ContactRow['type'][] = ['emergency', 'family', 'out_of_town', 'other'];
+
+function typeLabel(t: ContactRow['type']) {
+  return t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function ContactDetailScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
@@ -82,29 +90,71 @@ export default function ContactDetailScreen() {
 
   if (!Number.isFinite(id) || id <= 0) {
     return (
-      <View style={styles.center}>
-        <AppText>Invalid contact.</AppText>
-      </View>
+      <Screen back title="Contact">
+        <View style={[styles.center, { backgroundColor: theme.surface }]}>
+          <AppText style={{ color: theme.text }}>Invalid contact.</AppText>
+          <AppButton title="Go back" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: theme.surface }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.actions}>
-          <AppButton title="Call" style={styles.half} onPress={() => void openDialer(phone)} />
-          <AppButton
-            title="SMS"
-            variant="secondary"
-            style={styles.half}
-            onPress={() => void openSms(phone)}
-          />
+    <Screen back title={name.trim() ? name : 'Contact'}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: theme.surface }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: theme.contactsBanner,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
+            <Ionicons name="person-circle-outline" size={32} color={theme.contactsAccent} />
+          </View>
+          <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
+            {name.trim() ? name : 'Contact'}
+          </AppText>
+          <AppText muted variant="caption" style={{ lineHeight: 20 }}>
+            Call or message below, then update details if needed.
+          </AppText>
         </View>
 
-        <AppText variant="label">Name</AppText>
+        <AppCard
+          style={[
+            styles.actionCard,
+            {
+              borderRadius: radius.lg,
+              borderLeftWidth: 4,
+              borderLeftColor: theme.contactsAccent,
+            },
+          ]}
+        >
+          <View style={styles.actionsRow}>
+            <AppButton
+              title="Call"
+              style={styles.half}
+              onPress={() => void openDialer(phone)}
+            />
+            <AppButton
+              title="SMS"
+              variant="secondary"
+              style={styles.half}
+              onPress={() => void openSms(phone)}
+            />
+          </View>
+        </AppCard>
+
+        <AppText variant="label" style={{ color: theme.text }}>
+          Name
+        </AppText>
         <AppInput value={name} onChangeText={setName} />
         <AppText variant="label" style={styles.label}>
           Phone
@@ -121,15 +171,21 @@ export default function ContactDetailScreen() {
               <Pressable
                 key={t}
                 onPress={() => setType(t)}
-                style={[
+                style={({ pressed }) => [
                   styles.chip,
                   {
-                    borderColor: selected ? theme.accent : theme.border,
-                    backgroundColor: selected ? theme.surfaceElevated : 'transparent',
+                    minHeight: minTouchTarget,
+                    borderColor: selected ? theme.contactsAccent : theme.border,
+                    backgroundColor: selected ? theme.contactsMuted : 'transparent',
+                    opacity: pressed ? 0.92 : 1,
                   },
                 ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
               >
-                <AppText style={{ fontSize: 13 }}>{t.replace('_', ' ')}</AppText>
+                <AppText style={{ fontSize: 14, color: theme.text, fontWeight: selected ? '600' : '400' }}>
+                  {typeLabel(t)}
+                </AppText>
               </Pressable>
             );
           })}
@@ -150,26 +206,41 @@ export default function ContactDetailScreen() {
           style={{ minHeight: 80, textAlignVertical: 'top' }}
         />
 
-        <AppButton title="Save" onPress={() => void save()} />
-        <AppButton title="Delete" variant="ghost" onPress={remove} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <AppButton title="Save changes" onPress={() => void save()} />
+        <AppButton title="Delete contact" variant="ghost" onPress={remove} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  label: { marginTop: spacing.md, marginBottom: spacing.xs },
-  actions: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
+  scroll: { paddingHorizontal: screenPadding, paddingBottom: spacing.xxl, gap: spacing.xs },
+  hero: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  heroIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  actionCard: { marginBottom: spacing.lg, paddingVertical: spacing.md },
+  actionsRow: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
+  label: { marginTop: spacing.md, marginBottom: spacing.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     borderWidth: 2,
-    borderRadius: 999,
+    borderRadius: radius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    minHeight: 44,
     justifyContent: 'center',
   },
 });

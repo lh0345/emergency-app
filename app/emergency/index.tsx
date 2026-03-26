@@ -1,14 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScenarioCard } from '@/components/emergency/ScenarioCard';
 import { AppButton } from '@/components/ui/AppButton';
+import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
+import { screenPadding } from '@/constants/layout';
 import { SCENARIOS } from '@/constants/scenarios';
-import { spacing } from '@/constants/spacing';
+import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useEmergencySessionStore } from '@/store/emergencySessionStore';
 
@@ -19,14 +21,28 @@ export default function EmergencyIndexScreen() {
   const startScenario = useEmergencySessionStore((s) => s.startScenario);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.surface }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
-          What is happening?
-        </AppText>
-        <AppText muted style={{ marginBottom: spacing.lg }}>
-          Pick one. Short steps next.
-        </AppText>
+    <Screen variant="modal">
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: theme.emergencyBanner,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={[styles.heroIconWrap, { backgroundColor: theme.emergencyMuted }]}>
+            <Ionicons name="shield-checkmark" size={30} color={theme.accent} />
+          </View>
+          <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
+            What is happening?
+          </AppText>
+          <AppText muted variant="caption" style={styles.heroSub}>
+            Choose the closest situation. You will get short, clear steps next.
+          </AppText>
+        </View>
+
         {SCENARIOS.map((s) => (
           <ScenarioCard
             key={s.id}
@@ -38,18 +54,37 @@ export default function EmergencyIndexScreen() {
           />
         ))}
         <AppButton
-          title="Close"
+          title="Close emergency mode"
           variant="secondary"
           onPress={() => router.back()}
           style={styles.close}
         />
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  close: { marginTop: spacing.lg },
+  scroll: {
+    paddingHorizontal: screenPadding,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
+  },
+  hero: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  heroIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  heroTitle: { marginBottom: spacing.sm },
+  heroSub: { lineHeight: 20 },
+  close: { marginTop: spacing.md },
 });

@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 
 import { DatabaseProvider } from '@/db/context';
 import { useColorScheme } from '@/components/useColorScheme';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -43,19 +44,21 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <DatabaseProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="emergency"
-            options={{
-              headerShown: false,
-              presentation: 'fullScreenModal',
-              animation: 'fade',
-            }}
-          />
-        </Stack>
-      </DatabaseProvider>
+      <SafeAreaProvider>
+        <DatabaseProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="emergency"
+              options={{
+                headerShown: false,
+                presentation: 'fullScreenModal',
+                animation: 'fade',
+              }}
+            />
+          </Stack>
+        </DatabaseProvider>
+      </SafeAreaProvider>
     </ThemeProvider>
   );
 }

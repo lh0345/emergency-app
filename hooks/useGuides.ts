@@ -4,7 +4,7 @@ import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
 import type { GuideRow } from '@/types';
 
-export function useGuides(query?: string) {
+export function useGuides(query?: string, bookmarkedOnly?: boolean) {
   const { db, ready } = useDatabase();
   const [guides, setGuides] = useState<GuideRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,10 +12,10 @@ export function useGuides(query?: string) {
   const refresh = useCallback(async () => {
     if (!db) return;
     setLoading(true);
-    const rows = await Q.listGuides(db, query);
+    const rows = await Q.listGuides(db, query, bookmarkedOnly);
     setGuides(rows);
     setLoading(false);
-  }, [db, query]);
+  }, [db, query, bookmarkedOnly]);
 
   useEffect(() => {
     if (ready && db) void refresh();
