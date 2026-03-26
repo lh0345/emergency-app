@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
@@ -12,7 +11,7 @@ import { AppText } from '@/components/ui/AppText';
 import { SUPPLY_CATEGORIES } from '@/constants/categories';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding, scrollBottomInsetAboveFooter } from '@/constants/layout';
-import { radius, spacing } from '@/constants/spacing';
+import { spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { useSupplies } from '@/hooks/useSupplies';
@@ -52,27 +51,11 @@ export default function SuppliesListScreen() {
 
   const renderHeader = () => (
     <View>
-      <View
-        style={[
-          styles.hero,
-          {
-            backgroundColor: theme.suppliesBanner,
-            borderColor: theme.border,
-          },
-        ]}
-      >
-        <View style={[styles.heroIconWrap, { backgroundColor: theme.suppliesMuted }]}>
-          <Ionicons name="cube" size={22} color={theme.suppliesAccent} />
-        </View>
-        <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-          Supplies
-        </AppText>
-        <AppText muted variant="caption" style={styles.heroSub}>
-          Track stock, targets, and daily use so “days left” stays meaningful during shortages.
-        </AppText>
-      </View>
-      <AppText variant="label" style={[styles.sectionLabel, { color: theme.textMuted }]}>
-        By category
+      <AppText variant="title" style={[styles.pageTitle, { color: theme.text }]}>
+        Supplies
+      </AppText>
+      <AppText muted variant="caption" style={styles.pageSub}>
+        From Prepare — what you keep at home and rough coverage estimates.
       </AppText>
       <View style={styles.summaryBlock}>
         {SUPPLY_CATEGORIES.map((cat) => {
@@ -83,8 +66,8 @@ export default function SuppliesListScreen() {
           );
         })}
       </View>
-      <AppText variant="label" style={[styles.sectionLabel, { color: theme.textMuted, marginTop: spacing.sm }]}>
-        All items
+      <AppText variant="label" style={[styles.sectionLabel, { color: theme.textMuted }]}>
+        Items
       </AppText>
     </View>
   );
@@ -129,29 +112,18 @@ export default function SuppliesListScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hero: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { lineHeight: 18 },
+  pageTitle: { marginBottom: 2 },
+  pageSub: { lineHeight: 18, marginBottom: spacing.md },
   sectionLabel: {
     marginBottom: spacing.sm,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    fontSize: 12,
+    fontSize: 13,
   },
-  summaryBlock: { marginBottom: spacing.md },
+  summaryBlock: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
   list: {
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,

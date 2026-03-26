@@ -15,7 +15,7 @@ export default function ContactsStackLayout() {
         contentStyle: { backgroundColor: theme.surface },
       }}
     >
-      <Stack.Screen name="index" options={{ title: 'Contacts' }} />
+      <Stack.Screen name="index" options={{ title: 'People' }} />
       <Stack.Screen name="add" options={{ title: 'Add contact' }} />
       <Stack.Screen name="[id]" options={{ title: 'Contact' }} />
       <Stack.Screen name="settings" options={{ title: 'App settings' }} />

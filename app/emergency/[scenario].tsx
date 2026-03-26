@@ -88,66 +88,46 @@ export default function EmergencyScenarioScreen() {
   return (
     <Screen variant="modal" back title={scenario.title}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.titleRow}>
-          <View style={[styles.titleIcon, { backgroundColor: theme.emergencyMuted }]}>
-            <Ionicons name="reader-outline" size={22} color={theme.accent} />
-          </View>
-          <View style={styles.titleText}>
-            <AppText variant="title" style={{ color: theme.text }}>
-              {scenario.title}
-            </AppText>
-            {step === 'questions' && qCount > 0 ? (
-              <AppText muted variant="caption" style={styles.stepHint}>
-                Answer {qCount === 1 ? '1 question' : `${qCount} quick questions`} to tailor steps.
-              </AppText>
-            ) : step === 'questions' && qCount === 0 ? (
-              <AppText muted variant="caption" style={styles.stepHint}>
-                Tap below to see your top actions for this situation.
-              </AppText>
-            ) : step === 'actions' ? (
-              <AppText muted variant="caption" style={styles.stepHint}>
-                Prioritized actions — do these first when safe.
-              </AppText>
-            ) : null}
-        </View>
-        </View>
+        {step === 'questions' && qCount > 0 ? (
+          <AppText muted variant="caption" style={styles.stepHint}>
+            {qCount === 1 ? '1 question' : `${qCount} questions`} to tailor steps.
+          </AppText>
+        ) : step === 'questions' && qCount === 0 ? (
+          <AppText muted variant="caption" style={styles.stepHint}>
+            Continue to see suggested actions.
+          </AppText>
+        ) : step === 'actions' ? (
+          <AppText muted variant="caption" style={styles.stepHint}>
+            Do these first when safe.
+          </AppText>
+        ) : null}
 
-        {relatedGuides.length > 0 ? (
-          <AppCard
-            style={[
-              styles.relatedCard,
-              {
-                borderRadius: radius.lg,
-                borderLeftWidth: 4,
-                borderLeftColor: theme.accent,
-              },
-            ]}
-          >
-            <AppText variant="label" style={[styles.relatedLabel, { color: theme.accent }]}>
-              Related guides (offline)
+        {step === 'actions' && relatedGuides.length > 0 ? (
+          <View style={styles.relatedWrap}>
+            <AppText variant="caption" style={{ color: theme.textMuted, marginBottom: spacing.xs }}>
+              Guides
             </AppText>
             {relatedGuides.map((g) => (
               <Pressable
                 key={g.id}
                 onPress={() => router.push(`/library/${g.id}`)}
-                style={({ pressed }) => [
-                  styles.relatedRow,
-                  { opacity: pressed ? 0.88 : 1, backgroundColor: theme.emergencyMuted },
-                ]}
+                style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
                 accessibilityRole="button"
                 accessibilityLabel={`Open guide ${g.title}`}
               >
-                <Ionicons name="book-outline" size={18} color={theme.accent} />
-                <AppText style={{ color: theme.text, flex: 1, marginLeft: spacing.sm }}>{g.title}</AppText>
-                <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+                <AppText style={{ color: theme.accent, fontWeight: '600', marginBottom: spacing.xs }}>
+                  {g.title}
+                </AppText>
               </Pressable>
             ))}
-          </AppCard>
+          </View>
         ) : null}
 
-        {scenario.relatedSupplyCategories && scenario.relatedSupplyCategories.length > 0 ? (
+        {step === 'actions' &&
+        scenario.relatedSupplyCategories &&
+        scenario.relatedSupplyCategories.length > 0 ? (
           <AppText muted variant="caption" style={styles.supplyHint}>
-            Supplies to think about: {scenario.relatedSupplyCategories.join(', ')}
+            Supplies: {scenario.relatedSupplyCategories.join(', ')}
           </AppText>
         ) : null}
 
@@ -244,16 +224,8 @@ const styles = StyleSheet.create({
   },
   empty: { flex: 1, padding: spacing.md, justifyContent: 'center' },
   emptyBtn: { marginTop: spacing.md },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.md, gap: spacing.sm },
-  titleIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  titleText: { flex: 1, minWidth: 0 },
-  stepHint: { marginTop: spacing.xs, lineHeight: 18 },
+  stepHint: { marginBottom: spacing.md, lineHeight: 18 },
+  relatedWrap: { marginBottom: spacing.md },
   qCard: { marginBottom: spacing.lg },
   qMeta: { marginBottom: spacing.sm, letterSpacing: 0.4 },
   option: {
@@ -284,16 +256,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
     marginTop: spacing.xs,
-  },
-  relatedCard: { marginBottom: spacing.md, paddingVertical: spacing.sm },
-  relatedLabel: { marginBottom: spacing.sm, letterSpacing: 0.3 },
-  relatedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-    marginBottom: spacing.xs,
   },
   supplyHint: { marginBottom: spacing.md, lineHeight: 18 },
 });

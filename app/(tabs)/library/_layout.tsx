@@ -15,7 +15,7 @@ export default function LibraryStackLayout() {
         contentStyle: { backgroundColor: theme.surface },
       }}
     >
-      <Stack.Screen name="index" options={{ title: 'Library' }} />
+      <Stack.Screen name="index" options={{ title: 'Guides' }} />
       <Stack.Screen name="[id]" options={{ title: 'Guide' }} />
     </Stack>
   );

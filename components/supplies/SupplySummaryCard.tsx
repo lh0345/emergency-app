@@ -37,64 +37,37 @@ export function SupplySummaryCard({
       style={[
         styles.card,
         {
-          borderLeftWidth: 3,
-          borderLeftColor: theme.suppliesAccent,
-          borderRadius: radius.lg,
+          borderLeftWidth: 2,
+          borderLeftColor: lowStock && count > 0 ? theme.warning : theme.suppliesAccent,
+          borderRadius: radius.md,
         },
       ]}
     >
       <View style={styles.row}>
-        <View style={[styles.iconWrap, { backgroundColor: theme.suppliesMuted }]}>
-          <Ionicons name={icon} size={18} color={theme.suppliesAccent} />
-        </View>
-        <View style={styles.textCol}>
-          <AppText variant="subtitle" style={{ color: theme.text }}>
-            {category}
-          </AppText>
-          <AppText muted variant="caption">
-            {count === 0 ? 'No items' : `${count} item${count === 1 ? '' : 's'}`}
-          </AppText>
-        </View>
-        <View style={[styles.countPill, { backgroundColor: theme.suppliesMuted }]}>
-          <AppText variant="label" style={{ color: theme.suppliesAccent, fontSize: 13 }}>
-            {count}
-          </AppText>
-        </View>
+        <Ionicons name={icon} size={16} color={theme.suppliesAccent} style={styles.icon} />
+        <AppText style={[styles.cat, { color: theme.text }]} numberOfLines={1}>
+          {category}
+        </AppText>
+        <AppText variant="label" style={{ color: theme.suppliesAccent, fontSize: 14, fontWeight: '700' }}>
+          {count}
+        </AppText>
       </View>
-      {lowStock ? (
-        <View style={styles.warnRow}>
-          <Ionicons name="alert-circle-outline" size={16} color={theme.warning} />
-          <AppText variant="caption" style={{ color: theme.warning, marginLeft: spacing.sm, flex: 1, lineHeight: 18 }}>
-            Some quantities look low — tap an item to review.
-          </AppText>
-        </View>
-      ) : null}
     </AppCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.sm, paddingVertical: spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textCol: { flex: 1, minWidth: 0 },
-  countPill: {
-    minWidth: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  card: {
+    width: '48%',
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
-  warnRow: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: spacing.md,
+    alignItems: 'center',
+    gap: spacing.xs,
   },
+  icon: { opacity: 0.9 },
+  cat: { flex: 1, fontSize: 13, fontWeight: '600' },
 });

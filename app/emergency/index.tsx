@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -10,7 +9,7 @@ import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding } from '@/constants/layout';
 import { SCENARIOS } from '@/constants/scenarios';
-import { radius, spacing } from '@/constants/spacing';
+import { spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useEmergencySessionStore } from '@/store/emergencySessionStore';
 
@@ -23,23 +22,10 @@ export default function EmergencyIndexScreen() {
   return (
     <Screen variant="modal">
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View
-          style={[
-            styles.hero,
-            {
-              backgroundColor: theme.emergencyBanner,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <View style={[styles.heroIconWrap, { backgroundColor: theme.emergencyMuted }]}>
-            <Ionicons name="shield-checkmark" size={22} color={theme.accent} />
-          </View>
-          <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-            What is happening?
-          </AppText>
-          <AppText muted variant="caption" style={styles.heroSub}>
-            Pick what matches — outages, shortages, or safety. Short questions tailor steps and your checklist.
+        <View style={styles.intro}>
+          <AppText variant="title" style={{ color: theme.text }}>What&apos;s happening?</AppText>
+          <AppText muted variant="caption" style={styles.introSub}>
+            Choose the closest situation. You can refine with a few questions next.
           </AppText>
         </View>
 
@@ -70,21 +56,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
   },
-  hero: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { lineHeight: 18 },
+  intro: { marginBottom: spacing.md },
+  introSub: { lineHeight: 18, marginTop: 4 },
   close: { marginTop: spacing.sm },
 });

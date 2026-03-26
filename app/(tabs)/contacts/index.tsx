@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -10,7 +9,7 @@ import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding, scrollBottomInsetAboveFooter } from '@/constants/layout';
-import { radius, spacing } from '@/constants/spacing';
+import { spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { useContacts } from '@/hooks/useContacts';
@@ -31,35 +30,24 @@ export default function ContactsListScreen() {
   );
 
   const renderHeader = () => (
-    <View
-      style={[
-        styles.hero,
-        {
-          backgroundColor: theme.contactsBanner,
-          borderColor: theme.border,
-        },
-      ]}
-    >
-      <View style={[styles.heroIconWrap, { backgroundColor: theme.contactsMuted }]}>
-        <Ionicons name="people" size={22} color={theme.contactsAccent} />
-      </View>
-      <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-        Your contacts
+    <View style={styles.headerBlock}>
+      <AppText variant="title" style={{ color: theme.text }}>
+        People
       </AppText>
-      <AppText muted variant="caption" style={styles.heroSub}>
-        Add family and out-of-town contacts for fast call or SMS when it matters.
+      <AppText muted variant="caption" style={styles.headerSub}>
+        Who to call, household size for estimates, and meeting places.
       </AppText>
-      <View style={styles.heroLinks}>
+      <View style={styles.linkRow}>
         <Pressable onPress={() => router.push('/contacts/household')} accessibilityRole="link">
-          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>Household profile</AppText>
+          <AppText style={{ color: theme.contactsAccent, fontSize: 14 }}>Household</AppText>
         </Pressable>
         <AppText style={{ color: theme.textMuted }}> · </AppText>
         <Pressable onPress={() => router.push('/contacts/locations')} accessibilityRole="link">
-          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>Saved locations</AppText>
+          <AppText style={{ color: theme.contactsAccent, fontSize: 14 }}>Locations</AppText>
         </Pressable>
         <AppText style={{ color: theme.textMuted }}> · </AppText>
         <Pressable onPress={() => router.push('/contacts/settings')} accessibilityRole="link">
-          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>App settings</AppText>
+          <AppText style={{ color: theme.contactsAccent, fontSize: 14 }}>Settings</AppText>
         </Pressable>
       </View>
     </View>
@@ -114,27 +102,13 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: scrollBottomInsetAboveFooter,
   },
-  hero: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { lineHeight: 18 },
-  heroLinks: {
+  headerBlock: { marginBottom: spacing.md },
+  headerSub: { lineHeight: 18, marginTop: 2 },
+  linkRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     marginTop: spacing.sm,
-    gap: spacing.xs,
+    gap: 4,
   },
 });

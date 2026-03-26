@@ -30,33 +30,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="plans"
+        name="prepare"
         options={{
-          title: 'Plans',
-          tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="supplies"
-        options={{
-          title: 'Supplies',
-          tabBarIcon: ({ color }) => <Ionicons name="cube" color={color} size={22} />,
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          title: 'Library',
-          tabBarIcon: ({ color }) => <Ionicons name="book" color={color} size={22} />,
+          title: 'Prepare',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="shield-checkmark-outline" color={color} size={22} />
+          ),
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
-          title: 'Contacts',
+          title: 'People',
           tabBarIcon: ({ color }) => <Ionicons name="people" color={color} size={22} />,
         }}
       />
+      <Tabs.Screen name="plans" options={{ href: null }} />
+      <Tabs.Screen name="supplies" options={{ href: null }} />
+      <Tabs.Screen name="library" options={{ href: null }} />
     </Tabs>
   );
 }

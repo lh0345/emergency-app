@@ -51,20 +51,17 @@ export function ScenarioCard({
           {
             borderLeftWidth: 3,
             borderLeftColor: theme.accent,
-            paddingVertical: spacing.md,
+            paddingVertical: spacing.sm,
           },
         ]}
       >
         <View style={styles.row}>
           <View style={[styles.iconWrap, { backgroundColor: theme.emergencyMuted }]}>
-            <Ionicons name={icon} size={20} color={theme.accent} />
+            <Ionicons name={icon} size={18} color={theme.accent} />
           </View>
           <View style={styles.textCol}>
             <AppText variant="subtitle" style={{ color: theme.text }}>
               {scenario.title}
-            </AppText>
-            <AppText muted variant="caption" style={styles.hint}>
-              Tap to open steps
             </AppText>
           </View>
           <Ionicons name="chevron-forward" size={22} color={theme.textMuted} style={styles.chevron} />
@@ -75,20 +72,19 @@ export function ScenarioCard({
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.sm, borderRadius: radius.lg },
+  card: { marginBottom: spacing.xs, borderRadius: radius.md },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   textCol: { flex: 1, minWidth: 0 },
-  hint: { marginTop: 2 },
   chevron: { opacity: 0.85 },
 });

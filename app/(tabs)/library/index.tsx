@@ -38,25 +38,12 @@ export default function LibraryListScreen() {
 
   const renderHeader = () => (
     <View>
-      <View
-        style={[
-          styles.hero,
-          {
-            backgroundColor: theme.libraryBanner,
-            borderColor: theme.border,
-          },
-        ]}
-      >
-        <View style={[styles.heroIconWrap, { backgroundColor: theme.libraryMuted }]}>
-          <Ionicons name="library" size={22} color={theme.libraryAccent} />
-        </View>
-        <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-          Guides
-        </AppText>
-        <AppText muted variant="caption" style={styles.heroSub}>
-          Emergency playbooks plus self-reliance skills — all stored on your device for offline reading.
-        </AppText>
-      </View>
+      <AppText variant="title" style={[styles.pageTitle, { color: theme.text }]}>
+        Guides
+      </AppText>
+      <AppText muted variant="caption" style={styles.pageSub}>
+        From Prepare — read offline; filter or search below.
+      </AppText>
 
       <View style={styles.filterRow}>
         {(
@@ -75,7 +62,7 @@ export default function LibraryListScreen() {
                 styles.filterChip,
                 {
                   borderColor: selected ? theme.libraryAccent : theme.border,
-                  backgroundColor: selected ? theme.libraryMuted : theme.surfaceElevated,
+                  backgroundColor: selected ? theme.libraryMuted : 'transparent',
                   opacity: pressed ? 0.9 : 1,
                 },
               ]}
@@ -175,22 +162,8 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingWrap: { flex: 1 },
-  hero: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { lineHeight: 18 },
+  pageTitle: { marginBottom: 2 },
+  pageSub: { lineHeight: 18, marginBottom: spacing.md },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -198,11 +171,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    minHeight: minTouchTarget,
+    minHeight: 40,
     justifyContent: 'center',
   },
   searchRow: {

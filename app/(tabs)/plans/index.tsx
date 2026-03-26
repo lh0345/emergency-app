@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -10,7 +9,7 @@ import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding, scrollBottomInsetAboveFooter } from '@/constants/layout';
-import { radius, spacing } from '@/constants/spacing';
+import { spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { usePlans } from '@/hooks/usePlans';
@@ -29,23 +28,12 @@ export default function PlansListScreen() {
   );
 
   const renderHeader = () => (
-    <View
-      style={[
-        styles.hero,
-        {
-          backgroundColor: theme.plansBanner,
-          borderColor: theme.border,
-        },
-      ]}
-    >
-      <View style={[styles.heroIconWrap, { backgroundColor: theme.plansMuted }]}>
-        <Ionicons name="list-circle" size={24} color={theme.plansAccent} />
-      </View>
-      <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-        Preparedness plans
+    <View style={styles.headerBlock}>
+      <AppText variant="title" style={{ color: theme.text }}>
+        Plans
       </AppText>
-      <AppText muted variant="caption" style={styles.heroSub}>
-        Plans for shortages, outages, comms, and shelter — each with checklist, supplies, and review dates.
+      <AppText muted variant="caption" style={styles.headerSub}>
+        From Prepare — your lists for outages, go-bags, and drills.
       </AppText>
     </View>
   );
@@ -94,22 +82,8 @@ export default function PlansListScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hero: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroTitle: { marginBottom: spacing.xs },
-  heroSub: { lineHeight: 18 },
+  headerBlock: { marginBottom: spacing.md },
+  headerSub: { lineHeight: 18, marginTop: 2 },
   list: {
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,
