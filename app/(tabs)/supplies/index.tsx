@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
 import { SupplySummaryCard } from '@/components/supplies/SupplySummaryCard';
@@ -23,8 +24,14 @@ export default function SuppliesListScreen() {
   const theme = getThemeColors(scheme === 'dark');
   const router = useRouter();
   const { ready, error } = useDatabase();
-  const { supplies, loading } = useSupplies();
+  const { supplies, loading, refresh } = useSupplies();
   const footerPad = useTabBarFooterPadding();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && !error) void refresh({ silent: true });
+    }, [ready, error, refresh])
+  );
 
   const byCategory = useMemo(() => {
     const map: Record<SupplyCategory, typeof supplies> = {
@@ -55,7 +62,7 @@ export default function SuppliesListScreen() {
         ]}
       >
         <View style={[styles.heroIconWrap, { backgroundColor: theme.suppliesMuted }]}>
-          <Ionicons name="cube" size={30} color={theme.suppliesAccent} />
+          <Ionicons name="cube" size={22} color={theme.suppliesAccent} />
         </View>
         <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
           Supplies
@@ -85,7 +92,7 @@ export default function SuppliesListScreen() {
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={[styles.emptyIcon, { backgroundColor: theme.suppliesMuted }]}>
-        <Ionicons name="archive-outline" size={40} color={theme.suppliesAccent} />
+        <Ionicons name="archive-outline" size={28} color={theme.suppliesAccent} />
       </View>
       <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
         Nothing tracked yet
@@ -175,9 +182,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   emptyIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

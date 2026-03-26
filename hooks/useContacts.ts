@@ -9,13 +9,16 @@ export function useContacts() {
   const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    if (!db) return;
-    setLoading(true);
-    const rows = await Q.listContacts(db);
-    setContacts(rows);
-    setLoading(false);
-  }, [db]);
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!db) return;
+      if (!opts?.silent) setLoading(true);
+      const rows = await Q.listContacts(db);
+      setContacts(rows);
+      setLoading(false);
+    },
+    [db]
+  );
 
   useEffect(() => {
     if (ready && db) void refresh();

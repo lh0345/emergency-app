@@ -59,3 +59,12 @@ export type GuideRow = {
 };
 
 export type GuideStep = { title: string; detail?: string };
+
+export type SavedLocationType = 'meeting' | 'evacuation' | 'shelter' | 'other';
+
+export type SavedLocationRow = {
+  id: number;
+  name: string;
+  address: string;
+  type: SavedLocationType;
+};

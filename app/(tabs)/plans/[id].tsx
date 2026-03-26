@@ -43,7 +43,16 @@ export default function PlanDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    if (!db || !Number.isFinite(id)) return;
+    if (!Number.isFinite(id) || id <= 0) {
+      setPlan(null);
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const p = await Q.getPlan(db, id);
     setPlan(p);
@@ -51,8 +60,10 @@ export default function PlanDetailScreen() {
       setTitle(p.title);
       setType(p.type);
       setSummary(p.summary);
+    } else {
+      setItems([]);
     }
-    const lines = await Q.listChecklistItems(db, 'plan', String(id));
+    const lines = p ? await Q.listChecklistItems(db, 'plan', String(id)) : [];
     setItems(lines);
     setLoading(false);
   }, [db, id]);
@@ -112,11 +123,24 @@ export default function PlanDetailScreen() {
     );
   }
 
-  if (loading || !plan) {
+  if (loading) {
     return (
       <Screen back title="Plan">
         <View style={[styles.center, { backgroundColor: theme.surface }]}>
           <ActivityIndicator color={theme.plansAccent} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!plan) {
+    return (
+      <Screen back title="Plan">
+        <View style={[styles.center, { backgroundColor: theme.surface, padding: spacing.lg }]}>
+          <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center' }}>
+            Plan not found. It may have been deleted.
+          </AppText>
+          <AppButton title="Back" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
         </View>
       </Screen>
     );
@@ -244,12 +268,12 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIcon: {
-    width: 52,
-    height: 52,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

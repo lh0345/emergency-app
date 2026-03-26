@@ -17,9 +17,11 @@ function typeLabel(type: ContactRowData['type']) {
 export function ContactRow({
   contact,
   onOpen,
+  smsDefaultBody,
 }: {
   contact: ContactRowData;
   onOpen: () => void;
+  smsDefaultBody: string;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
@@ -29,10 +31,10 @@ export function ContactRow({
       style={[
         styles.card,
         {
-          borderLeftWidth: 4,
+          borderLeftWidth: 3,
           borderLeftColor: theme.contactsAccent,
           borderRadius: radius.lg,
-          paddingVertical: spacing.md,
+          paddingVertical: spacing.sm,
         },
       ]}
     >
@@ -44,7 +46,7 @@ export function ContactRow({
           accessibilityLabel={`${contact.name}, open contact`}
         >
           <View style={[styles.avatar, { backgroundColor: theme.contactsMuted }]}>
-            <Ionicons name="person" size={22} color={theme.contactsAccent} />
+            <Ionicons name="person" size={18} color={theme.contactsAccent} />
           </View>
           <View style={styles.textCol}>
             <AppText variant="subtitle" style={{ color: theme.text }}>
@@ -59,7 +61,7 @@ export function ContactRow({
               </AppText>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={theme.textMuted} style={styles.chevron} />
+          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} style={styles.chevron} />
         </Pressable>
 
         <View style={styles.quick}>
@@ -72,10 +74,10 @@ export function ContactRow({
             accessibilityLabel={`Call ${contact.name}`}
             accessibilityRole="button"
           >
-            <Ionicons name="call" size={20} color={theme.contactsAccent} />
+            <Ionicons name="call" size={18} color={theme.contactsAccent} />
           </Pressable>
           <Pressable
-            onPress={() => void openSms(contact.phone)}
+            onPress={() => void openSms(contact.phone, smsDefaultBody)}
             style={({ pressed }) => [
               styles.iconBtn,
               { backgroundColor: theme.surface, borderColor: theme.border, opacity: pressed ? 0.85 : 1 },
@@ -83,7 +85,7 @@ export function ContactRow({
             accessibilityLabel={`SMS ${contact.name}`}
             accessibilityRole="button"
           >
-            <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.contactsAccent} />
+            <Ionicons name="chatbubble-ellipses-outline" size={18} color={theme.contactsAccent} />
           </Pressable>
         </View>
       </View>
@@ -102,8 +104,8 @@ const styles = StyleSheet.create({
     minHeight: minTouchTarget,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

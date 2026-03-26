@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
 import { getThemeColors } from '@/constants/Colors';
-import { minTouchTarget, spacing } from '@/constants/spacing';
+import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 
 export function AppInput(props: TextInputProps) {
@@ -31,8 +31,9 @@ const styles = StyleSheet.create({
   input: {
     minHeight: minTouchTarget,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
-    fontSize: 16,
+    paddingVertical: spacing.sm,
+    fontSize: 15,
   },
 });

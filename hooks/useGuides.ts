@@ -9,13 +9,16 @@ export function useGuides(query?: string, bookmarkedOnly?: boolean) {
   const [guides, setGuides] = useState<GuideRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    if (!db) return;
-    setLoading(true);
-    const rows = await Q.listGuides(db, query, bookmarkedOnly);
-    setGuides(rows);
-    setLoading(false);
-  }, [db, query, bookmarkedOnly]);
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!db) return;
+      if (!opts?.silent) setLoading(true);
+      const rows = await Q.listGuides(db, query, bookmarkedOnly);
+      setGuides(rows);
+      setLoading(false);
+    },
+    [db, query, bookmarkedOnly]
+  );
 
   useEffect(() => {
     if (ready && db) void refresh();

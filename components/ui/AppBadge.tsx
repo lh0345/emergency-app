@@ -33,8 +33,8 @@ export function AppBadge({ text, tone = 'neutral' }: { text: string; tone?: Tone
 const styles = StyleSheet.create({
   wrap: {
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
     borderRadius: radius.sm,
   },
 });

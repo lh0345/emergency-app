@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { GuideStep } from '@/components/library/GuideStep';
@@ -28,16 +29,26 @@ export default function GuideDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    if (!db || !Number.isFinite(id)) return;
+    if (!Number.isFinite(id) || id <= 0) {
+      setGuide(null);
+      setLoading(false);
+      return;
+    }
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const g = await Q.getGuide(db, id);
     setGuide(g);
     setLoading(false);
   }, [db, id]);
 
-  useEffect(() => {
-    if (ready && db) void load();
-  }, [ready, db, load]);
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && db) void load();
+    }, [ready, db, load])
+  );
 
   const toggleBookmark = async () => {
     if (!guide || !db) return;
@@ -56,11 +67,24 @@ export default function GuideDetailScreen() {
     );
   }
 
-  if (loading || !guide) {
+  if (loading) {
     return (
       <Screen back title="Guide">
         <View style={[styles.center, { backgroundColor: theme.surface }]}>
           <ActivityIndicator color={theme.libraryAccent} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!guide) {
+    return (
+      <Screen back title="Guide">
+        <View style={[styles.center, { backgroundColor: theme.surface, padding: spacing.lg }]}>
+          <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center' }}>
+            Guide not found.
+          </AppText>
+          <AppButton title="Back" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
         </View>
       </Screen>
     );
@@ -223,12 +247,12 @@ export default function GuideDetailScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  scroll: { paddingHorizontal: screenPadding, paddingBottom: spacing.xxl },
+  scroll: { paddingHorizontal: screenPadding, paddingBottom: spacing.xl },
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroTop: {
     flexDirection: 'row',
@@ -253,8 +277,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
   sectionTitle: { marginBottom: spacing.md, marginTop: spacing.sm },
   block: { marginBottom: spacing.lg, paddingVertical: spacing.sm },

@@ -30,10 +30,10 @@ export function GuideCard({
         style={[
           styles.card,
           {
-            borderLeftWidth: 4,
+            borderLeftWidth: 3,
             borderLeftColor: theme.libraryAccent,
             borderRadius: radius.lg,
-            paddingVertical: spacing.md,
+            paddingVertical: spacing.sm,
           },
         ]}
       >
@@ -64,7 +64,7 @@ export function GuideCard({
               ) : null}
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={theme.textMuted} style={styles.chevron} />
+          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} style={styles.chevron} />
         </View>
       </AppCard>
     </Pressable>
@@ -75,14 +75,14 @@ const styles = StyleSheet.create({
   card: { marginBottom: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconWrap: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   textCol: { flex: 1, minWidth: 0 },
-  overview: { marginTop: 4, lineHeight: 20 },
+  overview: { marginTop: 2, lineHeight: 18 },
   meta: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -26,10 +26,10 @@ export function PlanCard({
       style={[
         styles.card,
         {
-          borderLeftWidth: 4,
+          borderLeftWidth: 3,
           borderLeftColor: theme.plansAccent,
           borderRadius: radius.lg,
-          paddingVertical: spacing.md,
+          paddingVertical: spacing.sm,
         },
       ]}
     >
@@ -45,7 +45,7 @@ export function PlanCard({
             {plan.summary || plan.type}
           </AppText>
         </View>
-        <Ionicons name="chevron-forward" size={22} color={theme.textMuted} style={styles.chevron} />
+        <Ionicons name="chevron-forward" size={18} color={theme.textMuted} style={styles.chevron} />
       </Pressable>
       <View style={styles.actions}>
         <Pressable
@@ -61,7 +61,7 @@ export function PlanCard({
           accessibilityRole="button"
           accessibilityLabel="Duplicate plan"
         >
-          <Ionicons name="copy-outline" size={20} color={theme.plansAccent} />
+          <Ionicons name="copy-outline" size={18} color={theme.plansAccent} />
           <AppText variant="caption" style={{ color: theme.plansAccent, fontWeight: '600', marginLeft: spacing.sm }}>
             Duplicate
           </AppText>
@@ -75,16 +75,16 @@ const styles = StyleSheet.create({
   card: { marginBottom: spacing.md },
   main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconWrap: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   textCol: { flex: 1, minWidth: 0 },
-  summary: { marginTop: 4, lineHeight: 20 },
+  summary: { marginTop: 2, lineHeight: 18 },
   chevron: { opacity: 0.85 },
-  actions: { marginTop: spacing.md, paddingLeft: 56 },
+  actions: { marginTop: spacing.sm, paddingLeft: 48 },
   dupBtn: {
     flexDirection: 'row',
     alignItems: 'center',

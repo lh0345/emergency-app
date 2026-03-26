@@ -41,15 +41,15 @@ export function ScenarioCard({
         style={[
           styles.card,
           {
-            borderLeftWidth: 4,
+            borderLeftWidth: 3,
             borderLeftColor: theme.accent,
-            paddingVertical: spacing.lg,
+            paddingVertical: spacing.md,
           },
         ]}
       >
         <View style={styles.row}>
           <View style={[styles.iconWrap, { backgroundColor: theme.emergencyMuted }]}>
-            <Ionicons name={icon} size={26} color={theme.accent} />
+            <Ionicons name={icon} size={20} color={theme.accent} />
           </View>
           <View style={styles.textCol}>
             <AppText variant="subtitle" style={{ color: theme.text }}>
@@ -67,15 +67,15 @@ export function ScenarioCard({
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.md, borderRadius: radius.lg },
+  card: { marginBottom: spacing.sm, borderRadius: radius.lg },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   iconWrap: {
-    width: 52,
-    height: 52,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

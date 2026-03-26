@@ -14,8 +14,8 @@ export function useTabBarFooterPadding() {
   return useMemo(
     () => ({
       paddingHorizontal: screenPadding,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.lg + insets.bottom,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.md + insets.bottom,
     }),
     [insets.bottom]
   );

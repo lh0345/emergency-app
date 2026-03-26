@@ -27,9 +27,9 @@ export function AppText({
 
 const styles = StyleSheet.create({
   base: {},
-  title: { fontSize: 24, fontWeight: '700', letterSpacing: 0.2 },
-  subtitle: { fontSize: 18, fontWeight: '600' },
-  body: { fontSize: 16, lineHeight: 22 },
-  caption: { fontSize: 13, lineHeight: 18 },
-  label: { fontSize: 14, fontWeight: '600', letterSpacing: 0.3 },
+  title: { fontSize: 20, fontWeight: '700', letterSpacing: 0.15 },
+  subtitle: { fontSize: 16, fontWeight: '600' },
+  body: { fontSize: 15, lineHeight: 20 },
+  caption: { fontSize: 12, lineHeight: 16 },
+  label: { fontSize: 13, fontWeight: '600', letterSpacing: 0.25 },
 });

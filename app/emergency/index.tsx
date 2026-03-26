@@ -33,7 +33,7 @@ export default function EmergencyIndexScreen() {
           ]}
         >
           <View style={[styles.heroIconWrap, { backgroundColor: theme.emergencyMuted }]}>
-            <Ionicons name="shield-checkmark" size={30} color={theme.accent} />
+            <Ionicons name="shield-checkmark" size={22} color={theme.accent} />
           </View>
           <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
             What is happening?
@@ -68,23 +68,23 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xl,
   },
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIconWrap: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  heroTitle: { marginBottom: spacing.sm },
-  heroSub: { lineHeight: 20 },
-  close: { marginTop: spacing.md },
+  heroTitle: { marginBottom: spacing.xs },
+  heroSub: { lineHeight: 18 },
+  close: { marginTop: spacing.sm },
 });

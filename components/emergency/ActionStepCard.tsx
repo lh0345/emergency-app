@@ -17,7 +17,7 @@ export function ActionStepCard({ index, text }: { index: number; text: string })
       style={[
         styles.card,
         {
-          borderLeftWidth: 3,
+          borderLeftWidth: 2,
           borderLeftColor: theme.accent,
         },
       ]}
@@ -33,19 +33,19 @@ export function ActionStepCard({ index, text }: { index: number; text: string })
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.md, borderRadius: radius.lg },
-  row: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+  card: { marginBottom: spacing.sm, borderRadius: radius.lg },
+  row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
   },
-  text: { flex: 1, fontSize: 17, lineHeight: 25 },
+  text: { flex: 1, fontSize: 15, lineHeight: 22 },
 });

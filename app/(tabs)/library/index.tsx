@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { GuideCard } from '@/components/library/GuideCard';
@@ -21,7 +22,13 @@ export default function LibraryListScreen() {
   const { ready, error } = useDatabase();
   const [q, setQ] = useState('');
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
-  const { guides, loading } = useGuides(q.trim() || undefined, bookmarksOnly);
+  const { guides, loading, refresh } = useGuides(q.trim() || undefined, bookmarksOnly);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && !error) void refresh({ silent: true });
+    }, [ready, error, refresh])
+  );
 
   const renderHeader = () => (
     <View>
@@ -35,7 +42,7 @@ export default function LibraryListScreen() {
         ]}
       >
         <View style={[styles.heroIconWrap, { backgroundColor: theme.libraryMuted }]}>
-          <Ionicons name="library" size={28} color={theme.libraryAccent} />
+          <Ionicons name="library" size={22} color={theme.libraryAccent} />
         </View>
         <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
           Guides
@@ -81,7 +88,7 @@ export default function LibraryListScreen() {
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={[styles.emptyIcon, { backgroundColor: theme.libraryMuted }]}>
-        <Ionicons name="search-outline" size={36} color={theme.libraryAccent} />
+        <Ionicons name="search-outline" size={28} color={theme.libraryAccent} />
       </View>
       <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
         {bookmarksOnly ? 'No saved guides' : 'No guides match'}
@@ -137,19 +144,19 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   heroIconWrap: {
-    width: 52,
-    height: 52,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  heroTitle: { marginBottom: spacing.sm },
-  heroSub: { lineHeight: 20 },
+  heroTitle: { marginBottom: spacing.xs },
+  heroSub: { lineHeight: 18 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -176,9 +183,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

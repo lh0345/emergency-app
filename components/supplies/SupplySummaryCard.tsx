@@ -35,7 +35,7 @@ export function SupplySummaryCard({
       style={[
         styles.card,
         {
-          borderLeftWidth: 4,
+          borderLeftWidth: 3,
           borderLeftColor: theme.suppliesAccent,
           borderRadius: radius.lg,
         },
@@ -43,7 +43,7 @@ export function SupplySummaryCard({
     >
       <View style={styles.row}>
         <View style={[styles.iconWrap, { backgroundColor: theme.suppliesMuted }]}>
-          <Ionicons name={icon} size={22} color={theme.suppliesAccent} />
+          <Ionicons name={icon} size={18} color={theme.suppliesAccent} />
         </View>
         <View style={styles.textCol}>
           <AppText variant="subtitle" style={{ color: theme.text }}>
@@ -54,7 +54,7 @@ export function SupplySummaryCard({
           </AppText>
         </View>
         <View style={[styles.countPill, { backgroundColor: theme.suppliesMuted }]}>
-          <AppText variant="label" style={{ color: theme.suppliesAccent, fontSize: 15 }}>
+          <AppText variant="label" style={{ color: theme.suppliesAccent, fontSize: 13 }}>
             {count}
           </AppText>
         </View>
@@ -72,20 +72,20 @@ export function SupplySummaryCard({
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.md, paddingVertical: spacing.md },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  card: { marginBottom: spacing.sm, paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   textCol: { flex: 1, minWidth: 0 },
   countPill: {
-    minWidth: 36,
-    height: 36,
-    borderRadius: 18,
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,

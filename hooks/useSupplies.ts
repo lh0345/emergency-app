@@ -9,13 +9,16 @@ export function useSupplies() {
   const [supplies, setSupplies] = useState<SupplyRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    if (!db) return;
-    setLoading(true);
-    const rows = await Q.listSupplies(db);
-    setSupplies(rows);
-    setLoading(false);
-  }, [db]);
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!db) return;
+      if (!opts?.silent) setLoading(true);
+      const rows = await Q.listSupplies(db);
+      setSupplies(rows);
+      setLoading(false);
+    },
+    [db]
+  );
 
   useEffect(() => {
     if (ready && db) void refresh();

@@ -50,7 +50,7 @@ export function EmergencyChecklistItem({
             ]}
           >
             {done ? (
-              <Ionicons name="checkmark" size={18} color="#ffffff" />
+              <Ionicons name="checkmark" size={14} color="#ffffff" />
             ) : null}
           </View>
           <AppText
@@ -69,16 +69,16 @@ export function EmergencyChecklistItem({
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.md, paddingVertical: spacing.md },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  card: { marginBottom: spacing.sm, paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   check: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    marginTop: 1,
   },
-  text: { flex: 1, fontSize: 17, lineHeight: 25 },
+  text: { flex: 1, fontSize: 15, lineHeight: 21 },
 });

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 import { getThemeColors } from '@/constants/Colors';
-import { minTouchTarget, spacing } from '@/constants/spacing';
+import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 
 import { AppText } from './AppText';
@@ -76,8 +76,9 @@ export function AppButton({
 const styles = StyleSheet.create({
   root: {
     minHeight: minTouchTarget,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   label: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
-import { ContactRow } from '@/components/contacts/ContactRow';
+import { SavedLocationRow } from '@/components/contacts/SavedLocationRow';
 import { AppButton } from '@/components/ui/AppButton';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
@@ -13,17 +13,15 @@ import { screenPadding, scrollBottomInsetAboveFooter } from '@/constants/layout'
 import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
-import { useContacts } from '@/hooks/useContacts';
-import { useSettings } from '@/hooks/useSettings';
+import { useSavedLocations } from '@/hooks/useSavedLocations';
 import { useTabBarFooterPadding } from '@/hooks/useTabBarFooterPadding';
 
-export default function ContactsListScreen() {
+export default function SavedLocationsListScreen() {
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
   const router = useRouter();
   const { ready, error } = useDatabase();
-  const { contacts, loading, refresh } = useContacts();
-  const { smsDefaultBody } = useSettings();
+  const { locations, loading, refresh } = useSavedLocations();
   const footerPad = useTabBarFooterPadding();
 
   useFocusEffect(
@@ -43,43 +41,34 @@ export default function ContactsListScreen() {
       ]}
     >
       <View style={[styles.heroIconWrap, { backgroundColor: theme.contactsMuted }]}>
-        <Ionicons name="people" size={22} color={theme.contactsAccent} />
+        <Ionicons name="map" size={22} color={theme.contactsAccent} />
       </View>
       <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
-        Your contacts
+        Saved locations
       </AppText>
       <AppText muted variant="caption" style={styles.heroSub}>
-        Add family and out-of-town contacts for fast call or SMS when it matters.
+        Meeting points, evacuation spots, or shelters — for quick reference when plans name them.
       </AppText>
-      <View style={styles.heroLinks}>
-        <Pressable onPress={() => router.push('/contacts/locations')} accessibilityRole="link">
-          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>Saved locations</AppText>
-        </Pressable>
-        <AppText style={{ color: theme.textMuted }}> · </AppText>
-        <Pressable onPress={() => router.push('/contacts/settings')} accessibilityRole="link">
-          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>App settings</AppText>
-        </Pressable>
-      </View>
     </View>
   );
 
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={[styles.emptyIcon, { backgroundColor: theme.contactsMuted }]}>
-        <Ionicons name="person-add-outline" size={36} color={theme.contactsAccent} />
+        <Ionicons name="location-outline" size={28} color={theme.contactsAccent} />
       </View>
       <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
-        No contacts yet
+        No saved locations yet
       </AppText>
       <AppText muted variant="caption" style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }}>
-        Add people you may need to reach quickly — family, emergency, or out-of-town.
+        Add addresses you may need during an evacuation or reunion.
       </AppText>
     </View>
   );
 
   if (!ready || error) {
     return (
-      <Screen>
+      <Screen back title="Saved locations">
         <View style={[styles.center, { backgroundColor: theme.surface }]}>
           <AppText style={{ color: theme.text }}>{error ? 'Database error' : 'Loading…'}</AppText>
         </View>
@@ -88,24 +77,20 @@ export default function ContactsListScreen() {
   }
 
   return (
-    <Screen>
+    <Screen back title="Saved locations">
       <View style={styles.root}>
         {loading ? (
           <ActivityIndicator color={theme.contactsAccent} style={{ marginTop: spacing.xxl }} />
         ) : (
           <FlatList
-            data={contacts}
-            keyExtractor={(c) => String(c.id)}
+            data={locations}
+            keyExtractor={(l) => String(l.id)}
             contentContainerStyle={styles.list}
             ListHeaderComponent={renderHeader}
             ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
-              <ContactRow
-                contact={item}
-                smsDefaultBody={smsDefaultBody}
-                onOpen={() => router.push(`/contacts/${item.id}`)}
-              />
+              <SavedLocationRow location={item} onOpen={() => router.push(`/contacts/locations/${item.id}`)} />
             )}
           />
         )}
@@ -116,7 +101,7 @@ export default function ContactsListScreen() {
             footerPad,
           ]}
         >
-          <AppButton title="Add contact" onPress={() => router.push('/contacts/add')} />
+          <AppButton title="Add location" onPress={() => router.push('/contacts/locations/new')} />
         </View>
       </View>
     </Screen>
@@ -147,13 +132,6 @@ const styles = StyleSheet.create({
   },
   heroTitle: { marginBottom: spacing.xs },
   heroSub: { lineHeight: 18 },
-  heroLinks: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    gap: spacing.xs,
-  },
   empty: {
     alignItems: 'center',
     paddingVertical: spacing.xl,

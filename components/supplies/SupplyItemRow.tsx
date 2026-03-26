@@ -52,7 +52,7 @@ export function SupplyItemRow({
         style={[
           styles.card,
           {
-            borderLeftWidth: 4,
+            borderLeftWidth: 3,
             borderLeftColor: theme.suppliesAccent,
             borderRadius: radius.lg,
             paddingVertical: spacing.md,
@@ -62,7 +62,7 @@ export function SupplyItemRow({
       >
         <View style={styles.row}>
           <View style={[styles.iconWrap, { backgroundColor: theme.suppliesMuted }]}>
-            <Ionicons name={icon} size={22} color={theme.suppliesAccent} />
+            <Ionicons name={icon} size={18} color={theme.suppliesAccent} />
           </View>
           <View style={styles.textCol}>
             <AppText variant="subtitle" style={{ color: theme.text }} numberOfLines={2}>
@@ -92,10 +92,10 @@ export function SupplyItemRow({
 
 const styles = StyleSheet.create({
   card: {},
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   iconWrap: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

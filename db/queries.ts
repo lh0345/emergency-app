@@ -6,6 +6,8 @@ import type {
   ContactRow,
   GuideRow,
   PlanRow,
+  SavedLocationRow,
+  SavedLocationType,
   SupplyCategory,
   SupplyRow,
 } from '@/types';
@@ -399,4 +401,90 @@ export async function setGuideBookmarked(
   bookmarked: boolean
 ) {
   await db.runAsync('UPDATE guides SET bookmarked = ? WHERE id = ?', [bookmarked ? 1 : 0, id]);
+}
+
+// --- Settings (key-value) ---
+
+export async function getSetting(db: SQLite.SQLiteDatabase, key: string): Promise<string | null> {
+  const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM settings WHERE key = ?', [
+    key,
+  ]);
+  return row?.value ?? null;
+}
+
+export async function setSetting(db: SQLite.SQLiteDatabase, key: string, value: string) {
+  await db.runAsync(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    [key, value]
+  );
+}
+
+// --- Saved locations ---
+
+function normalizeSavedLocationType(raw: string): SavedLocationType {
+  if (raw === 'meeting' || raw === 'evacuation' || raw === 'shelter' || raw === 'other') {
+    return raw;
+  }
+  return 'other';
+}
+
+export async function listSavedLocations(db: SQLite.SQLiteDatabase): Promise<SavedLocationRow[]> {
+  const rows = await db.getAllAsync<{
+    id: number;
+    name: string;
+    address: string;
+    type: string;
+  }>('SELECT * FROM saved_locations ORDER BY name ASC');
+  return rows.map((r) => ({
+    ...r,
+    type: normalizeSavedLocationType(r.type),
+  }));
+}
+
+export async function getSavedLocation(
+  db: SQLite.SQLiteDatabase,
+  id: number
+): Promise<SavedLocationRow | null> {
+  const row = await db.getFirstAsync<{
+    id: number;
+    name: string;
+    address: string;
+    type: string;
+  }>('SELECT * FROM saved_locations WHERE id = ?', [id]);
+  if (!row) return null;
+  return { ...row, type: normalizeSavedLocationType(row.type) };
+}
+
+export async function insertSavedLocation(
+  db: SQLite.SQLiteDatabase,
+  input: { name: string; address: string; type: SavedLocationType }
+): Promise<number> {
+  const res = await db.runAsync(
+    `INSERT INTO saved_locations (name, address, type) VALUES (?, ?, ?)`,
+    [input.name, input.address, input.type]
+  );
+  return Number(res.lastInsertRowId);
+}
+
+export async function updateSavedLocation(
+  db: SQLite.SQLiteDatabase,
+  id: number,
+  input: Partial<{ name: string; address: string; type: SavedLocationType }>
+) {
+  const row = await getSavedLocation(db, id);
+  if (!row) return;
+  await db.runAsync(
+    `UPDATE saved_locations SET name = ?, address = ?, type = ? WHERE id = ?`,
+    [
+      input.name ?? row.name,
+      input.address ?? row.address,
+      input.type ?? row.type,
+      id,
+    ]
+  );
+}
+
+export async function deleteSavedLocation(db: SQLite.SQLiteDatabase, id: number) {
+  await db.runAsync('DELETE FROM saved_locations WHERE id = ?', [id]);
 }

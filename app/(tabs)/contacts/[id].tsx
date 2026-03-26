@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +23,7 @@ import { screenPadding } from '@/constants/layout';
 import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
+import { useSettings } from '@/hooks/useSettings';
 import * as Q from '@/db/queries';
 import { openDialer, openSms } from '@/utils/linking';
 import type { ContactRow } from '@/types';
@@ -38,28 +41,46 @@ export default function ContactDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
   const { db, ready } = useDatabase();
+  const { smsDefaultBody } = useSettings();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [type, setType] = useState<ContactRow['type']>('family');
   const [notes, setNotes] = useState('');
   const [meetingLocation, setMeetingLocation] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [found, setFound] = useState(false);
 
   const load = useCallback(async () => {
-    if (!db || !Number.isFinite(id)) return;
+    if (!Number.isFinite(id) || id <= 0) {
+      setFound(false);
+      setLoading(false);
+      return;
+    }
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     const c = await Q.getContact(db, id);
     if (c) {
+      setFound(true);
       setName(c.name);
       setPhone(c.phone);
       setType(c.type);
       setNotes(c.notes ?? '');
       setMeetingLocation(c.meetingLocation ?? '');
+    } else {
+      setFound(false);
     }
+    setLoading(false);
   }, [db, id]);
 
-  useEffect(() => {
-    if (ready && db) void load();
-  }, [ready, db, load]);
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && db) void load();
+    }, [ready, db, load])
+  );
 
   const save = async () => {
     if (!db || !name.trim() || !phone.trim()) return;
@@ -99,6 +120,29 @@ export default function ContactDetailScreen() {
     );
   }
 
+  if (loading) {
+    return (
+      <Screen back title="Contact">
+        <View style={[styles.center, { backgroundColor: theme.surface }]}>
+          <ActivityIndicator color={theme.contactsAccent} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!found) {
+    return (
+      <Screen back title="Contact">
+        <View style={[styles.center, { backgroundColor: theme.surface, padding: spacing.lg }]}>
+          <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center' }}>
+            Contact not found. It may have been deleted.
+          </AppText>
+          <AppButton title="Back" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen back title={name.trim() ? name : 'Contact'}>
       <KeyboardAvoidingView
@@ -117,7 +161,7 @@ export default function ContactDetailScreen() {
           ]}
         >
           <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
-            <Ionicons name="person-circle-outline" size={32} color={theme.contactsAccent} />
+            <Ionicons name="person-circle-outline" size={24} color={theme.contactsAccent} />
           </View>
           <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
             {name.trim() ? name : 'Contact'}
@@ -147,7 +191,7 @@ export default function ContactDetailScreen() {
               title="SMS"
               variant="secondary"
               style={styles.half}
-              onPress={() => void openSms(phone)}
+              onPress={() => void openSms(phone, smsDefaultBody)}
             />
           </View>
         </AppCard>
@@ -220,12 +264,12 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIcon: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

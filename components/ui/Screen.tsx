@@ -48,7 +48,7 @@ export function Screen({ children, variant = 'tab', edges, back, title, style }:
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={26} color={theme.text} />
+            <Ionicons name="chevron-back" size={22} color={theme.text} />
           </Pressable>
           {title ? (
             <AppText variant="subtitle" numberOfLines={1} style={[styles.headerTitle, { color: theme.text }]}>
@@ -72,11 +72,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingLeft: spacing.xs,
     paddingRight: screenPadding,
-    minHeight: 44,
+    minHeight: 40,
   },
   backBtn: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 40,
+    minHeight: 40,
     justifyContent: 'center',
     paddingRight: spacing.sm,
   },

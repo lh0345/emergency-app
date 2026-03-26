@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
 import { PlanCard } from '@/components/plans/PlanCard';
@@ -20,8 +21,14 @@ export default function PlansListScreen() {
   const theme = getThemeColors(scheme === 'dark');
   const router = useRouter();
   const { ready, error } = useDatabase();
-  const { plans, loading, duplicatePlan } = usePlans();
+  const { plans, loading, duplicatePlan, refresh } = usePlans();
   const footerPad = useTabBarFooterPadding();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && !error) void refresh({ silent: true });
+    }, [ready, error, refresh])
+  );
 
   const renderHeader = () => (
     <View
@@ -34,7 +41,7 @@ export default function PlansListScreen() {
       ]}
     >
       <View style={[styles.heroIconWrap, { backgroundColor: theme.plansMuted }]}>
-        <Ionicons name="list-circle" size={32} color={theme.plansAccent} />
+        <Ionicons name="list-circle" size={24} color={theme.plansAccent} />
       </View>
       <AppText variant="title" style={[styles.heroTitle, { color: theme.text }]}>
         Preparedness plans
@@ -48,7 +55,7 @@ export default function PlansListScreen() {
   const renderEmpty = () => (
     <View style={styles.empty}>
       <View style={[styles.emptyIcon, { backgroundColor: theme.plansMuted }]}>
-        <Ionicons name="document-text-outline" size={40} color={theme.plansAccent} />
+        <Ionicons name="document-text-outline" size={28} color={theme.plansAccent} />
       </View>
       <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
         No plans yet
@@ -111,19 +118,19 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIconWrap: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  heroTitle: { marginBottom: spacing.sm },
-  heroSub: { lineHeight: 20 },
+  heroTitle: { marginBottom: spacing.xs },
+  heroSub: { lineHeight: 18 },
   list: {
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,
@@ -135,9 +142,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   emptyIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

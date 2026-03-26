@@ -156,12 +156,12 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIcon: {
-    width: 52,
-    height: 52,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

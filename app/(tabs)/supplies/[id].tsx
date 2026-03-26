@@ -1,5 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -48,7 +49,15 @@ export default function SupplyDetailScreen() {
   const [notes, setNotes] = useState('');
 
   const load = useCallback(async () => {
-    if (!db || !Number.isFinite(id)) return;
+    if (!Number.isFinite(id) || id <= 0) {
+      setRow(null);
+      setLoading(false);
+      return;
+    }
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const s = await Q.getSupply(db, id);
     setRow(s);
@@ -64,9 +73,11 @@ export default function SupplyDetailScreen() {
     setLoading(false);
   }, [db, id]);
 
-  useEffect(() => {
-    if (ready && db) void load();
-  }, [ready, db, load]);
+  useFocusEffect(
+    useCallback(() => {
+      if (ready && db) void load();
+    }, [ready, db, load])
+  );
 
   const save = async () => {
     if (!db || !name.trim()) return;
@@ -99,8 +110,6 @@ export default function SupplyDetailScreen() {
     ]);
   };
 
-  const days = calculateDaysLeft(row?.expiryDate ?? null);
-
   if (!Number.isFinite(id) || id <= 0) {
     return (
       <Screen back title="Supply">
@@ -111,7 +120,7 @@ export default function SupplyDetailScreen() {
     );
   }
 
-  if (loading || !row) {
+  if (loading) {
     return (
       <Screen back title="Supply">
         <View style={[styles.center, { backgroundColor: theme.surface }]}>
@@ -120,6 +129,21 @@ export default function SupplyDetailScreen() {
       </Screen>
     );
   }
+
+  if (!row) {
+    return (
+      <Screen back title="Supply">
+        <View style={[styles.center, { backgroundColor: theme.surface, padding: spacing.lg }]}>
+          <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center' }}>
+            Item not found. It may have been deleted.
+          </AppText>
+          <AppButton title="Back" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
+        </View>
+      </Screen>
+    );
+  }
+
+  const days = calculateDaysLeft(row.expiryDate ?? null);
 
   return (
     <Screen back title={name.trim() || 'Supply'}>
@@ -291,16 +315,16 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   expiryCard: { marginBottom: spacing.lg, paddingVertical: spacing.md },
   expiryRow: { flexDirection: 'row', alignItems: 'center' },

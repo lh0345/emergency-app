@@ -42,7 +42,7 @@ export function AppCheckbox({
           },
         ]}
       >
-        {checked ? <Ionicons name="checkmark" size={16} color="#ffffff" /> : null}
+        {checked ? <Ionicons name="checkmark" size={14} color="#ffffff" /> : null}
       </View>
       <AppText style={[styles.label, { color: theme.text }]}>{label}</AppText>
     </Pressable>
@@ -57,12 +57,12 @@ const styles = StyleSheet.create({
     minHeight: minTouchTarget,
   },
   box: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { flex: 1, fontSize: 16 },
+  label: { flex: 1, fontSize: 14 },
 });
