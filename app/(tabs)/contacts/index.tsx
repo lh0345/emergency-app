@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { ContactRow } from '@/components/contacts/ContactRow';
-import { AppButton } from '@/components/ui/AppButton';
+import { FabAdd } from '@/components/ui/FabAdd';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
@@ -15,7 +15,6 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { useContacts } from '@/hooks/useContacts';
 import { useSettings } from '@/hooks/useSettings';
-import { useTabBarFooterPadding } from '@/hooks/useTabBarFooterPadding';
 
 export default function ContactsListScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -24,7 +23,6 @@ export default function ContactsListScreen() {
   const { ready, error } = useDatabase();
   const { contacts, loading, refresh } = useContacts();
   const { smsDefaultBody } = useSettings();
-  const footerPad = useTabBarFooterPadding();
 
   useFocusEffect(
     useCallback(() => {
@@ -52,6 +50,10 @@ export default function ContactsListScreen() {
         Add family and out-of-town contacts for fast call or SMS when it matters.
       </AppText>
       <View style={styles.heroLinks}>
+        <Pressable onPress={() => router.push('/contacts/household')} accessibilityRole="link">
+          <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>Household profile</AppText>
+        </Pressable>
+        <AppText style={{ color: theme.textMuted }}> · </AppText>
         <Pressable onPress={() => router.push('/contacts/locations')} accessibilityRole="link">
           <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>Saved locations</AppText>
         </Pressable>
@@ -60,20 +62,6 @@ export default function ContactsListScreen() {
           <AppText style={{ color: theme.contactsAccent, fontWeight: '600' }}>App settings</AppText>
         </Pressable>
       </View>
-    </View>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.contactsMuted }]}>
-        <Ionicons name="person-add-outline" size={36} color={theme.contactsAccent} />
-      </View>
-      <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
-        No contacts yet
-      </AppText>
-      <AppText muted variant="caption" style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }}>
-        Add people you may need to reach quickly — family, emergency, or out-of-town.
-      </AppText>
     </View>
   );
 
@@ -98,7 +86,6 @@ export default function ContactsListScreen() {
             keyExtractor={(c) => String(c.id)}
             contentContainerStyle={styles.list}
             ListHeaderComponent={renderHeader}
-            ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <ContactRow
@@ -109,15 +96,11 @@ export default function ContactsListScreen() {
             )}
           />
         )}
-        <View
-          style={[
-            styles.footer,
-            { borderTopColor: theme.border, backgroundColor: theme.surfaceElevated },
-            footerPad,
-          ]}
-        >
-          <AppButton title="Add contact" onPress={() => router.push('/contacts/add')} />
-        </View>
+        <FabAdd
+          color={theme.contactsAccent}
+          accessibilityLabel="Add contact"
+          onPress={() => router.push('/contacts/add')}
+        />
       </View>
     </Screen>
   );
@@ -153,24 +136,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.sm,
     gap: spacing.xs,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.md,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

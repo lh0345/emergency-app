@@ -1,85 +1,224 @@
 import type * as SQLite from 'expo-sqlite';
 
+import {
+  getDefaultSupplies,
+  getPlanTemplates,
+  getSeedGuides,
+  type SeedGuide,
+} from '@/db/seed';
 import type {
   ChecklistContextType,
   ChecklistItemRow,
   ContactRow,
   GuideRow,
+  HouseholdProfileRow,
+  LibraryGroup,
   PlanRow,
+  RestockPriority,
   SavedLocationRow,
   SavedLocationType,
   SupplyCategory,
   SupplyRow,
 } from '@/types';
 
+const CONTENT_PACK_KEY = 'content_pack_version';
+
 function nowIso() {
   return new Date().toISOString();
 }
 
-export async function seedIfEmpty(db: SQLite.SQLiteDatabase) {
-  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM guides');
-  if (row && row.c > 0) return;
+function normalizeSupplyRow(r: SupplyRow): SupplyRow {
+  return {
+    ...r,
+    subcategory: r.subcategory ?? '',
+    dailyUse: r.dailyUse ?? 0,
+    targetAmount: r.targetAmount ?? 0,
+    restockPriority: (r.restockPriority as RestockPriority) ?? 'normal',
+  };
+}
 
-  const guides = getSeedGuides();
-  for (const g of guides) {
+function normalizePlanRow(r: PlanRow): PlanRow {
+  return {
+    ...r,
+    householdProfileId: r.householdProfileId ?? null,
+    suppliesNeededJson: r.suppliesNeededJson ?? '[]',
+    contactIdsJson: r.contactIdsJson ?? '[]',
+    planNotes: r.planNotes ?? '',
+    reviewDate: r.reviewDate ?? null,
+  };
+}
+
+function normalizeGuideRow(r: GuideRow): GuideRow {
+  return {
+    ...r,
+    slug: r.slug ?? null,
+    tagsJson: r.tagsJson ?? '[]',
+    readingTime: r.readingTime ?? 5,
+    offlineReady: r.offlineReady ?? 1,
+    priority: r.priority ?? 0,
+    relatedTopicsJson: r.relatedTopicsJson ?? '[]',
+    libraryGroup: (r.libraryGroup as LibraryGroup) ?? 'emergency',
+  };
+}
+
+async function upsertGuideFromSeed(db: SQLite.SQLiteDatabase, g: SeedGuide) {
+  const stepsJson = JSON.stringify(g.steps);
+  const suppliesJson = JSON.stringify(g.supplies);
+  const mistakesJson = JSON.stringify(g.mistakes);
+  const tagsJson = JSON.stringify(g.tags);
+  const relatedJson = JSON.stringify(g.relatedTopics);
+  const existing = await db.getFirstAsync<{ id: number }>('SELECT id FROM guides WHERE slug = ?', [
+    g.slug,
+  ]);
+  if (existing) {
     await db.runAsync(
-      `INSERT INTO guides (title, category, overview, stepsJson, suppliesJson, mistakesJson, safetyNote, bookmarked)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+      `UPDATE guides SET
+        title = ?, category = ?, overview = ?, stepsJson = ?, suppliesJson = ?, mistakesJson = ?, safetyNote = ?,
+        tagsJson = ?, readingTime = ?, offlineReady = ?, priority = ?, relatedTopicsJson = ?, libraryGroup = ?
+       WHERE slug = ?`,
       [
         g.title,
         g.category,
         g.overview,
-        g.stepsJson,
-        g.suppliesJson,
-        g.mistakesJson,
+        stepsJson,
+        suppliesJson,
+        mistakesJson,
         g.safetyNote,
+        tagsJson,
+        g.readingTime,
+        g.offlineReady,
+        g.priority,
+        relatedJson,
+        g.libraryGroup,
+        g.slug,
+      ]
+    );
+  } else {
+    await db.runAsync(
+      `INSERT INTO guides (
+        slug, title, category, overview, stepsJson, suppliesJson, mistakesJson, safetyNote, bookmarked,
+        tagsJson, readingTime, offlineReady, priority, relatedTopicsJson, libraryGroup
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+      [
+        g.slug,
+        g.title,
+        g.category,
+        g.overview,
+        stepsJson,
+        suppliesJson,
+        mistakesJson,
+        g.safetyNote,
+        tagsJson,
+        g.readingTime,
+        g.offlineReady,
+        g.priority,
+        relatedJson,
+        g.libraryGroup,
       ]
     );
   }
 }
 
-function getSeedGuides() {
-  return [
-    {
-      title: 'First 10 minutes of a power outage',
-      category: 'Power',
-      overview: 'Stabilize light, preserve food temperature, and protect devices.',
-      stepsJson: JSON.stringify([
-        { title: 'Confirm scope', detail: 'Check breakers and neighbors if safe.' },
-        { title: 'Light', detail: 'Use flashlights; avoid candles near flammables.' },
-        { title: 'Fridge', detail: 'Keep doors closed; food stays cold for hours if sealed.' },
-      ]),
-      suppliesJson: JSON.stringify(['Flashlight', 'Power bank', 'Battery radio']),
-      mistakesJson: JSON.stringify(['Opening freezer repeatedly', 'Using generators indoors']),
-      safetyNote: 'Never run generators or grills indoors — carbon monoxide kills.',
-    },
-    {
-      title: 'Water outage: drinking safety',
-      category: 'Water',
-      overview: 'Prioritize drinking water and reduce non-essential use.',
-      stepsJson: JSON.stringify([
-        { title: 'Drinking', detail: 'Use sealed bottled water first.' },
-        { title: 'Hygiene', detail: 'Hand sanitizer for hands; reserve water for drinking if scarce.' },
-        { title: 'Listen', detail: 'Follow boil-water advisories from authorities.' },
-      ]),
-      suppliesJson: JSON.stringify(['Bottled water', 'Wipes', 'Buckets']),
-      mistakesJson: JSON.stringify(['Drinking flood water', 'Ignoring boil notices']),
-      safetyNote: 'When in doubt, use bottled or treated water for drinking.',
-    },
-    {
-      title: 'Evacuation go-bag checklist',
-      category: 'Evacuation',
-      overview: 'Leave fast with IDs, meds, and a way to charge your phone.',
-      stepsJson: JSON.stringify([
-        { title: 'IDs & cash', detail: 'Wallet, cards, small cash.' },
-        { title: 'Meds', detail: '7-day supply if possible; list of prescriptions.' },
-        { title: 'Charge', detail: 'Phone, cable, power bank.' },
-      ]),
-      suppliesJson: JSON.stringify(['Backpack', 'Water bottles', 'First aid']),
-      mistakesJson: JSON.stringify(['Delaying to pack non-essentials', 'Forgetting chargers']),
-      safetyNote: 'If ordered to evacuate, go — roads may clog quickly.',
-    },
-  ];
+async function seedDefaultSuppliesIfEmpty(db: SQLite.SQLiteDatabase) {
+  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM supplies');
+  if (row && row.c > 0) return;
+  const t = nowIso();
+  for (const s of getDefaultSupplies()) {
+    await db.runAsync(
+      `INSERT INTO supplies (
+        name, category, subcategory, quantity, unit, expiryDate, location, notes,
+        dailyUse, targetAmount, restockPriority, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
+      [
+        s.name,
+        s.category,
+        s.subcategory,
+        s.quantity,
+        s.unit,
+        s.notes,
+        s.dailyUse,
+        s.targetAmount,
+        s.restockPriority,
+        t,
+        t,
+      ]
+    );
+  }
+}
+
+async function seedPlanTemplatesIfEmpty(db: SQLite.SQLiteDatabase) {
+  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM plans');
+  if (row && row.c > 0) return;
+  const templates = getPlanTemplates();
+  const t = nowIso();
+  for (const p of templates) {
+    const res = await db.runAsync(
+      `INSERT INTO plans (
+        title, type, summary, createdAt, updatedAt,
+        householdProfileId, suppliesNeededJson, contactIdsJson, planNotes, reviewDate
+      ) VALUES (?, ?, ?, ?, ?, NULL, ?, '[]', ?, NULL)`,
+      [
+        p.title,
+        p.type,
+        p.summary,
+        t,
+        t,
+        JSON.stringify(p.suppliesNeeded),
+        p.planNotes,
+      ]
+    );
+    const planId = Number(res.lastInsertRowId);
+    let order = 0;
+    for (const line of p.checklist) {
+      await db.runAsync(
+        `INSERT INTO checklist_items (contextType, contextId, text, done, orderIndex) VALUES (?, ?, ?, 0, ?)`,
+        ['plan', String(planId), line, order++]
+      );
+    }
+  }
+}
+
+export async function ensureDefaultHouseholdProfile(db: SQLite.SQLiteDatabase) {
+  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM household_profile');
+  if (row && row.c > 0) return;
+  const t = nowIso();
+  await db.runAsync(
+    `INSERT INTO household_profile (
+      peopleCount, adults, children, dietaryNotes, medicineNotes,
+      waterUsePerDay, foodUsePerDay, heatingType, cookingType, vehicleFuelAccess, updatedAt
+    ) VALUES (1, 1, 0, '', '', 2, 2000, '', '', '', ?)`,
+    [t]
+  );
+}
+
+async function seedFullDatabase(db: SQLite.SQLiteDatabase) {
+  for (const g of getSeedGuides()) {
+    await upsertGuideFromSeed(db, g);
+  }
+  await seedDefaultSuppliesIfEmpty(db);
+  await ensureDefaultHouseholdProfile(db);
+  await seedPlanTemplatesIfEmpty(db);
+}
+
+/** Upserts guides/plan templates for installs that already had the small v1 guide set. */
+export async function ensureContentPack(db: SQLite.SQLiteDatabase) {
+  const ver = await getSetting(db, CONTENT_PACK_KEY);
+  if (ver === '2') return;
+  for (const g of getSeedGuides()) {
+    await upsertGuideFromSeed(db, g);
+  }
+  await seedPlanTemplatesIfEmpty(db);
+  await seedDefaultSuppliesIfEmpty(db);
+  await ensureDefaultHouseholdProfile(db);
+  await setSetting(db, CONTENT_PACK_KEY, '2');
+}
+
+export async function seedIfEmpty(db: SQLite.SQLiteDatabase) {
+  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM guides');
+  if (!row || row.c === 0) {
+    await seedFullDatabase(db);
+  }
+  await ensureContentPack(db);
 }
 
 // --- Supplies ---
@@ -88,7 +227,7 @@ export async function listSupplies(db: SQLite.SQLiteDatabase): Promise<SupplyRow
   const rows = await db.getAllAsync<SupplyRow>(
     'SELECT * FROM supplies ORDER BY category ASC, name ASC'
   );
-  return rows;
+  return rows.map(normalizeSupplyRow);
 }
 
 export async function insertSupply(
@@ -96,25 +235,35 @@ export async function insertSupply(
   input: {
     name: string;
     category: SupplyCategory;
+    subcategory?: string;
     quantity: number;
     unit: string;
     expiryDate: string | null;
     location: string | null;
     notes: string | null;
+    dailyUse?: number;
+    targetAmount?: number;
+    restockPriority?: RestockPriority;
   }
 ): Promise<number> {
   const t = nowIso();
   const res = await db.runAsync(
-    `INSERT INTO supplies (name, category, quantity, unit, expiryDate, location, notes, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO supplies (
+      name, category, subcategory, quantity, unit, expiryDate, location, notes,
+      dailyUse, targetAmount, restockPriority, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.name,
       input.category,
+      input.subcategory ?? '',
       input.quantity,
       input.unit,
       input.expiryDate,
       input.location,
       input.notes,
+      input.dailyUse ?? 0,
+      input.targetAmount ?? 0,
+      input.restockPriority ?? 'normal',
       t,
       t,
     ]
@@ -128,28 +277,38 @@ export async function updateSupply(
   input: Partial<{
     name: string;
     category: SupplyCategory;
+    subcategory: string;
     quantity: number;
     unit: string;
     expiryDate: string | null;
     location: string | null;
     notes: string | null;
+    dailyUse: number;
+    targetAmount: number;
+    restockPriority: RestockPriority;
   }>
 ) {
   const row = await db.getFirstAsync<SupplyRow>('SELECT * FROM supplies WHERE id = ?', [id]);
   if (!row) return;
+  const r = normalizeSupplyRow(row);
   const t = nowIso();
   await db.runAsync(
     `UPDATE supplies SET
-      name = ?, category = ?, quantity = ?, unit = ?, expiryDate = ?, location = ?, notes = ?, updatedAt = ?
+      name = ?, category = ?, subcategory = ?, quantity = ?, unit = ?, expiryDate = ?, location = ?, notes = ?,
+      dailyUse = ?, targetAmount = ?, restockPriority = ?, updatedAt = ?
      WHERE id = ?`,
     [
-      input.name ?? row.name,
-      input.category ?? row.category,
-      input.quantity ?? row.quantity,
-      input.unit ?? row.unit,
-      input.expiryDate !== undefined ? input.expiryDate : row.expiryDate,
-      input.location !== undefined ? input.location : row.location,
-      input.notes !== undefined ? input.notes : row.notes,
+      input.name ?? r.name,
+      input.category ?? r.category,
+      input.subcategory ?? r.subcategory,
+      input.quantity ?? r.quantity,
+      input.unit ?? r.unit,
+      input.expiryDate !== undefined ? input.expiryDate : r.expiryDate,
+      input.location !== undefined ? input.location : r.location,
+      input.notes !== undefined ? input.notes : r.notes,
+      input.dailyUse !== undefined ? input.dailyUse : r.dailyUse,
+      input.targetAmount !== undefined ? input.targetAmount : r.targetAmount,
+      input.restockPriority ?? r.restockPriority,
       t,
       id,
     ]
@@ -161,9 +320,8 @@ export async function deleteSupply(db: SQLite.SQLiteDatabase, id: number) {
 }
 
 export async function getSupply(db: SQLite.SQLiteDatabase, id: number): Promise<SupplyRow | null> {
-  return (
-    (await db.getFirstAsync<SupplyRow>('SELECT * FROM supplies WHERE id = ?', [id])) ?? null
-  );
+  const row = await db.getFirstAsync<SupplyRow>('SELECT * FROM supplies WHERE id = ?', [id]);
+  return row ? normalizeSupplyRow(row) : null;
 }
 
 // --- Contacts ---
@@ -232,32 +390,112 @@ export async function getContact(db: SQLite.SQLiteDatabase, id: number): Promise
 // --- Plans ---
 
 export async function listPlans(db: SQLite.SQLiteDatabase): Promise<PlanRow[]> {
-  return await db.getAllAsync<PlanRow>('SELECT * FROM plans ORDER BY updatedAt DESC');
+  const rows = await db.getAllAsync<PlanRow>('SELECT * FROM plans ORDER BY updatedAt DESC');
+  return rows.map(normalizePlanRow);
 }
 
 export async function insertPlan(
   db: SQLite.SQLiteDatabase,
-  input: { title: string; type: string; summary: string }
+  input: {
+    title: string;
+    type: string;
+    summary: string;
+    householdProfileId?: number | null;
+    suppliesNeededJson?: string;
+    contactIdsJson?: string;
+    planNotes?: string;
+    reviewDate?: string | null;
+  }
 ): Promise<number> {
   const t = nowIso();
   const res = await db.runAsync(
-    `INSERT INTO plans (title, type, summary, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-    [input.title, input.type, input.summary, t, t]
+    `INSERT INTO plans (
+      title, type, summary, createdAt, updatedAt,
+      householdProfileId, suppliesNeededJson, contactIdsJson, planNotes, reviewDate
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      input.title,
+      input.type,
+      input.summary,
+      t,
+      t,
+      input.householdProfileId ?? null,
+      input.suppliesNeededJson ?? '[]',
+      input.contactIdsJson ?? '[]',
+      input.planNotes ?? '',
+      input.reviewDate ?? null,
+    ]
   );
   return Number(res.lastInsertRowId);
+}
+
+export async function insertPlanWithChecklist(
+  db: SQLite.SQLiteDatabase,
+  input: {
+    title: string;
+    type: string;
+    summary: string;
+    checklist: string[];
+    suppliesNeededJson?: string;
+    planNotes?: string;
+    reviewDate?: string | null;
+  }
+): Promise<number> {
+  const id = await insertPlan(db, {
+    title: input.title,
+    type: input.type,
+    summary: input.summary,
+    suppliesNeededJson: input.suppliesNeededJson ?? '[]',
+    planNotes: input.planNotes ?? '',
+    reviewDate: input.reviewDate ?? null,
+  });
+  let order = 0;
+  for (const text of input.checklist) {
+    await insertChecklistItem(db, {
+      contextType: 'plan',
+      contextId: String(id),
+      text,
+      orderIndex: order++,
+    });
+  }
+  return id;
 }
 
 export async function updatePlan(
   db: SQLite.SQLiteDatabase,
   id: number,
-  input: Partial<{ title: string; type: string; summary: string }>
+  input: Partial<{
+    title: string;
+    type: string;
+    summary: string;
+    householdProfileId: number | null;
+    suppliesNeededJson: string;
+    contactIdsJson: string;
+    planNotes: string;
+    reviewDate: string | null;
+  }>
 ) {
   const row = await db.getFirstAsync<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
   if (!row) return;
+  const r = normalizePlanRow(row);
   const t = nowIso();
   await db.runAsync(
-    `UPDATE plans SET title = ?, type = ?, summary = ?, updatedAt = ? WHERE id = ?`,
-    [input.title ?? row.title, input.type ?? row.type, input.summary ?? row.summary, t, id]
+    `UPDATE plans SET
+      title = ?, type = ?, summary = ?, updatedAt = ?,
+      householdProfileId = ?, suppliesNeededJson = ?, contactIdsJson = ?, planNotes = ?, reviewDate = ?
+     WHERE id = ?`,
+    [
+      input.title ?? r.title,
+      input.type ?? r.type,
+      input.summary ?? r.summary,
+      t,
+      input.householdProfileId !== undefined ? input.householdProfileId : r.householdProfileId,
+      input.suppliesNeededJson ?? r.suppliesNeededJson,
+      input.contactIdsJson ?? r.contactIdsJson,
+      input.planNotes ?? r.planNotes,
+      input.reviewDate !== undefined ? input.reviewDate : r.reviewDate,
+      id,
+    ]
   );
 }
 
@@ -272,11 +510,26 @@ export async function deletePlan(db: SQLite.SQLiteDatabase, id: number) {
 export async function duplicatePlan(db: SQLite.SQLiteDatabase, id: number): Promise<number | null> {
   const plan = await db.getFirstAsync<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
   if (!plan) return null;
+  const p = normalizePlanRow(plan);
   const t = nowIso();
-  const newTitle = `${plan.title} (copy)`;
+  const newTitle = `${p.title} (copy)`;
   const res = await db.runAsync(
-    `INSERT INTO plans (title, type, summary, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-    [newTitle, plan.type, plan.summary, t, t]
+    `INSERT INTO plans (
+      title, type, summary, createdAt, updatedAt,
+      householdProfileId, suppliesNeededJson, contactIdsJson, planNotes, reviewDate
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      newTitle,
+      p.type,
+      p.summary,
+      t,
+      t,
+      p.householdProfileId,
+      p.suppliesNeededJson,
+      p.contactIdsJson,
+      p.planNotes,
+      p.reviewDate,
+    ]
   );
   const newId = Number(res.lastInsertRowId);
   const items = await db.getAllAsync<ChecklistItemRow>(
@@ -294,7 +547,8 @@ export async function duplicatePlan(db: SQLite.SQLiteDatabase, id: number): Prom
 }
 
 export async function getPlan(db: SQLite.SQLiteDatabase, id: number): Promise<PlanRow | null> {
-  return (await db.getFirstAsync<PlanRow>('SELECT * FROM plans WHERE id = ?', [id])) ?? null;
+  const row = await db.getFirstAsync<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
+  return row ? normalizePlanRow(row) : null;
 }
 
 // --- Checklist ---
@@ -366,33 +620,58 @@ export async function replaceEmergencyChecklist(
 export async function listGuides(
   db: SQLite.SQLiteDatabase,
   query?: string,
-  bookmarkedOnly?: boolean
+  bookmarkedOnly?: boolean,
+  libraryGroup?: LibraryGroup | 'all'
 ): Promise<GuideRow[]> {
   const search = query?.trim();
+  const group = libraryGroup ?? 'all';
+  const groupSql =
+    group === 'all' ? '' : group === 'emergency' ? ` AND libraryGroup = 'emergency'` : ` AND libraryGroup = 'self_reliance'`;
+
   if (search && bookmarkedOnly) {
     const q = `%${search}%`;
-    return await db.getAllAsync<GuideRow>(
-      `SELECT * FROM guides WHERE bookmarked = 1 AND (title LIKE ? OR overview LIKE ? OR category LIKE ?) ORDER BY title ASC`,
-      [q, q, q]
+    const rows = await db.getAllAsync<GuideRow>(
+      `SELECT * FROM guides WHERE bookmarked = 1 AND (title LIKE ? OR overview LIKE ? OR category LIKE ? OR tagsJson LIKE ?)${groupSql} ORDER BY priority DESC, title ASC`,
+      [q, q, q, q]
     );
+    return rows.map(normalizeGuideRow);
   }
   if (bookmarkedOnly) {
-    return await db.getAllAsync<GuideRow>(
-      'SELECT * FROM guides WHERE bookmarked = 1 ORDER BY title ASC'
+    const rows = await db.getAllAsync<GuideRow>(
+      `SELECT * FROM guides WHERE bookmarked = 1${groupSql} ORDER BY priority DESC, title ASC`
     );
+    return rows.map(normalizeGuideRow);
   }
   if (search) {
     const q = `%${search}%`;
-    return await db.getAllAsync<GuideRow>(
-      'SELECT * FROM guides WHERE title LIKE ? OR overview LIKE ? OR category LIKE ? ORDER BY title ASC',
-      [q, q, q]
+    const rows = await db.getAllAsync<GuideRow>(
+      `SELECT * FROM guides WHERE (title LIKE ? OR overview LIKE ? OR category LIKE ? OR tagsJson LIKE ?)${groupSql} ORDER BY priority DESC, title ASC`,
+      [q, q, q, q]
     );
+    return rows.map(normalizeGuideRow);
   }
-  return await db.getAllAsync<GuideRow>('SELECT * FROM guides ORDER BY title ASC');
+  const rows = await db.getAllAsync<GuideRow>(
+    `SELECT * FROM guides WHERE 1=1${groupSql} ORDER BY priority DESC, title ASC`
+  );
+  return rows.map(normalizeGuideRow);
+}
+
+export async function getGuidesBySlugs(
+  db: SQLite.SQLiteDatabase,
+  slugs: string[]
+): Promise<GuideRow[]> {
+  if (slugs.length === 0) return [];
+  const placeholders = slugs.map(() => '?').join(',');
+  const rows = await db.getAllAsync<GuideRow>(
+    `SELECT * FROM guides WHERE slug IN (${placeholders}) ORDER BY title ASC`,
+    slugs
+  );
+  return rows.map(normalizeGuideRow);
 }
 
 export async function getGuide(db: SQLite.SQLiteDatabase, id: number): Promise<GuideRow | null> {
-  return (await db.getFirstAsync<GuideRow>('SELECT * FROM guides WHERE id = ?', [id])) ?? null;
+  const row = await db.getFirstAsync<GuideRow>('SELECT * FROM guides WHERE id = ?', [id]);
+  return row ? normalizeGuideRow(row) : null;
 }
 
 export async function setGuideBookmarked(
@@ -401,6 +680,70 @@ export async function setGuideBookmarked(
   bookmarked: boolean
 ) {
   await db.runAsync('UPDATE guides SET bookmarked = ? WHERE id = ?', [bookmarked ? 1 : 0, id]);
+}
+
+// --- Household profile (single row) ---
+
+export async function getHouseholdProfile(
+  db: SQLite.SQLiteDatabase
+): Promise<HouseholdProfileRow | null> {
+  return (
+    (await db.getFirstAsync<HouseholdProfileRow>(
+      'SELECT * FROM household_profile ORDER BY id ASC LIMIT 1'
+    )) ?? null
+  );
+}
+
+export async function saveHouseholdProfile(
+  db: SQLite.SQLiteDatabase,
+  input: Partial<
+    Omit<HouseholdProfileRow, 'id' | 'updatedAt'> & { id?: number }
+  >
+) {
+  const existing = await getHouseholdProfile(db);
+  const t = nowIso();
+  if (!existing) {
+    await db.runAsync(
+      `INSERT INTO household_profile (
+        peopleCount, adults, children, dietaryNotes, medicineNotes,
+        waterUsePerDay, foodUsePerDay, heatingType, cookingType, vehicleFuelAccess, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        input.peopleCount ?? 1,
+        input.adults ?? 1,
+        input.children ?? 0,
+        input.dietaryNotes ?? '',
+        input.medicineNotes ?? '',
+        input.waterUsePerDay ?? 2,
+        input.foodUsePerDay ?? 2000,
+        input.heatingType ?? '',
+        input.cookingType ?? '',
+        input.vehicleFuelAccess ?? '',
+        t,
+      ]
+    );
+    return;
+  }
+  await db.runAsync(
+    `UPDATE household_profile SET
+      peopleCount = ?, adults = ?, children = ?, dietaryNotes = ?, medicineNotes = ?,
+      waterUsePerDay = ?, foodUsePerDay = ?, heatingType = ?, cookingType = ?, vehicleFuelAccess = ?, updatedAt = ?
+     WHERE id = ?`,
+    [
+      input.peopleCount ?? existing.peopleCount,
+      input.adults ?? existing.adults,
+      input.children ?? existing.children,
+      input.dietaryNotes !== undefined ? input.dietaryNotes : existing.dietaryNotes,
+      input.medicineNotes !== undefined ? input.medicineNotes : existing.medicineNotes,
+      input.waterUsePerDay ?? existing.waterUsePerDay,
+      input.foodUsePerDay ?? existing.foodUsePerDay,
+      input.heatingType !== undefined ? input.heatingType : existing.heatingType,
+      input.cookingType !== undefined ? input.cookingType : existing.cookingType,
+      input.vehicleFuelAccess !== undefined ? input.vehicleFuelAccess : existing.vehicleFuelAccess,
+      t,
+      existing.id,
+    ]
+  );
 }
 
 // --- Settings (key-value) ---

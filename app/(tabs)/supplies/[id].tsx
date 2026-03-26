@@ -18,7 +18,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { AppInput } from '@/components/ui/AppInput';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
-import { SUPPLY_CATEGORIES } from '@/constants/categories';
+import { SUBCATEGORY_HINTS, SUPPLY_CATEGORIES } from '@/constants/categories';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding } from '@/constants/layout';
 import { minTouchTarget, radius, spacing } from '@/constants/spacing';
@@ -27,7 +27,9 @@ import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
 import { calculateDaysLeft } from '@/utils/calculateDaysLeft';
 import { formatDate } from '@/utils/formatDate';
-import type { SupplyCategory, SupplyRow } from '@/types';
+import type { RestockPriority, SupplyCategory, SupplyRow } from '@/types';
+
+const RESTOCK: RestockPriority[] = ['low', 'normal', 'high', 'urgent'];
 
 export default function SupplyDetailScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
@@ -46,6 +48,10 @@ export default function SupplyDetailScreen() {
   const [unit, setUnit] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [location, setLocation] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [dailyUse, setDailyUse] = useState('');
+  const [targetAmount, setTargetAmount] = useState('');
+  const [restockPriority, setRestockPriority] = useState<RestockPriority>('normal');
   const [notes, setNotes] = useState('');
 
   const load = useCallback(async () => {
@@ -66,6 +72,10 @@ export default function SupplyDetailScreen() {
       setCategory(s.category);
       setQuantity(String(s.quantity));
       setUnit(s.unit);
+      setSubcategory(s.subcategory ?? '');
+      setDailyUse(s.dailyUse > 0 ? String(s.dailyUse) : '');
+      setTargetAmount(s.targetAmount > 0 ? String(s.targetAmount) : '');
+      setRestockPriority(s.restockPriority ?? 'normal');
       setExpiryDate(s.expiryDate ?? '');
       setLocation(s.location ?? '');
       setNotes(s.notes ?? '');
@@ -83,14 +93,20 @@ export default function SupplyDetailScreen() {
     if (!db || !name.trim()) return;
     const q = Number(quantity);
     if (Number.isNaN(q)) return;
+    const du = parseFloat(dailyUse);
+    const ta = parseFloat(targetAmount);
     await Q.updateSupply(db, id, {
       name: name.trim(),
       category,
+      subcategory: subcategory.trim(),
       quantity: q,
       unit: unit.trim() || 'units',
       expiryDate: expiryDate.trim() || null,
       location: location.trim() || null,
       notes: notes.trim() || null,
+      dailyUse: Number.isFinite(du) ? du : 0,
+      targetAmount: Number.isFinite(ta) ? ta : 0,
+      restockPriority,
     });
     await load();
   };
@@ -163,13 +179,16 @@ export default function SupplyDetailScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.suppliesMuted }]}>
-              <Ionicons name="create-outline" size={26} color={theme.suppliesAccent} />
+              <Ionicons name="create-outline" size={20} color={theme.suppliesAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
               {name.trim() || 'Supply'}
             </AppText>
             <AppText muted variant="caption" style={{ lineHeight: 20 }}>
-              Update quantity, location, or expiry. Save when you are done.
+              Update targets and daily use for clearer “days left” and restock signals.
+            </AppText>
+            <AppText muted variant="caption" style={{ lineHeight: 18, marginTop: spacing.sm }}>
+              Hints: {SUBCATEGORY_HINTS[category].join(', ') || '—'}
             </AppText>
           </View>
 
@@ -282,6 +301,49 @@ export default function SupplyDetailScreen() {
         <AppInput value={unit} onChangeText={setUnit} />
 
         <AppText variant="label" style={styles.label}>
+          Subcategory
+        </AppText>
+        <AppInput value={subcategory} onChangeText={setSubcategory} />
+
+        <AppText variant="label" style={styles.label}>
+          Daily use
+        </AppText>
+        <AppInput value={dailyUse} onChangeText={setDailyUse} keyboardType="decimal-pad" />
+
+        <AppText variant="label" style={styles.label}>
+          Target amount
+        </AppText>
+        <AppInput value={targetAmount} onChangeText={setTargetAmount} keyboardType="decimal-pad" />
+
+        <AppText variant="label" style={styles.label}>
+          Restock priority
+        </AppText>
+        <View style={styles.catRow}>
+          {RESTOCK.map((rp) => {
+            const selected = restockPriority === rp;
+            return (
+              <Pressable
+                key={rp}
+                onPress={() => setRestockPriority(rp)}
+                style={({ pressed }) => [
+                  styles.chip,
+                  {
+                    minHeight: minTouchTarget,
+                    borderColor: selected ? theme.suppliesAccent : theme.border,
+                    backgroundColor: selected ? theme.suppliesMuted : 'transparent',
+                    opacity: pressed ? 0.92 : 1,
+                  },
+                ]}
+              >
+                <AppText style={{ fontSize: 13, color: theme.text, fontWeight: selected ? '600' : '400' }}>
+                  {rp}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <AppText variant="label" style={styles.label}>
           Expiry (YYYY-MM-DD)
         </AppText>
         <AppInput value={expiryDate} onChangeText={setExpiryDate} />
@@ -329,7 +391,7 @@ const styles = StyleSheet.create({
   expiryCard: { marginBottom: spacing.lg, paddingVertical: spacing.md },
   expiryRow: { flexDirection: 'row', alignItems: 'center' },
   label: { marginTop: spacing.md, marginBottom: spacing.xs },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
   chip: {
     borderWidth: 2,
     borderRadius: radius.md,

@@ -55,7 +55,7 @@ export default function AppSettingsScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
-              <Ionicons name="settings-outline" size={28} color={theme.contactsAccent} />
+              <Ionicons name="settings-outline" size={22} color={theme.contactsAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
               Preferences

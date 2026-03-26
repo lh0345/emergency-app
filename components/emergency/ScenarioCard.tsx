@@ -11,12 +11,20 @@ import type { ScenarioDefinition } from '@/constants/scenarios';
 
 const SCENARIO_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   power_outage: 'flash-outline',
+  long_power_loss: 'hourglass-outline',
   water_outage: 'water-outline',
+  water_contamination: 'warning-outline',
   evacuation: 'walk-outline',
+  shelter_in_place: 'home-outline',
   medical_emergency: 'medical-outline',
+  medicine_shortage: 'medkit-outline',
   fire: 'flame-outline',
   severe_weather: 'thunderstorm-outline',
   no_communication: 'cellular-outline',
+  food_shortage: 'restaurant-outline',
+  fuel_shortage: 'car-outline',
+  supply_chain_disruption: 'git-network-outline',
+  inflation_pressure: 'cash-outline',
 };
 
 export function ScenarioCard({

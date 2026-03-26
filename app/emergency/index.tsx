@@ -39,7 +39,7 @@ export default function EmergencyIndexScreen() {
             What is happening?
           </AppText>
           <AppText muted variant="caption" style={styles.heroSub}>
-            Choose the closest situation. You will get short, clear steps next.
+            Pick what matches — outages, shortages, or safety. Short questions tailor steps and your checklist.
           </AppText>
         </View>
 

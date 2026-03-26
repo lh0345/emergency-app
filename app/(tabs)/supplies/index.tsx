@@ -6,7 +6,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
 import { SupplySummaryCard } from '@/components/supplies/SupplySummaryCard';
 import { SupplyItemRow } from '@/components/supplies/SupplyItemRow';
-import { AppButton } from '@/components/ui/AppButton';
+import { FabAdd } from '@/components/ui/FabAdd';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { SUPPLY_CATEGORIES } from '@/constants/categories';
@@ -16,7 +16,6 @@ import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { useSupplies } from '@/hooks/useSupplies';
-import { useTabBarFooterPadding } from '@/hooks/useTabBarFooterPadding';
 import type { SupplyCategory } from '@/types';
 
 export default function SuppliesListScreen() {
@@ -25,7 +24,6 @@ export default function SuppliesListScreen() {
   const router = useRouter();
   const { ready, error } = useDatabase();
   const { supplies, loading, refresh } = useSupplies();
-  const footerPad = useTabBarFooterPadding();
 
   useFocusEffect(
     useCallback(() => {
@@ -39,6 +37,8 @@ export default function SuppliesListScreen() {
       Food: [],
       Power: [],
       Medicine: [],
+      'Home resilience': [],
+      'Food growing': [],
       Other: [],
     };
     for (const s of supplies) {
@@ -68,7 +68,7 @@ export default function SuppliesListScreen() {
           Supplies
         </AppText>
         <AppText muted variant="caption" style={styles.heroSub}>
-          Track water, food, power, and meds. Category cards show counts; open any row to edit.
+          Track stock, targets, and daily use so “days left” stays meaningful during shortages.
         </AppText>
       </View>
       <AppText variant="label" style={[styles.sectionLabel, { color: theme.textMuted }]}>
@@ -85,20 +85,6 @@ export default function SuppliesListScreen() {
       </View>
       <AppText variant="label" style={[styles.sectionLabel, { color: theme.textMuted, marginTop: spacing.sm }]}>
         All items
-      </AppText>
-    </View>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.suppliesMuted }]}>
-        <Ionicons name="archive-outline" size={28} color={theme.suppliesAccent} />
-      </View>
-      <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
-        Nothing tracked yet
-      </AppText>
-      <AppText muted variant="caption" style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }}>
-        Add water, food, batteries, and medicine so you know what you have before an emergency.
       </AppText>
     </View>
   );
@@ -124,22 +110,17 @@ export default function SuppliesListScreen() {
             keyExtractor={(s) => String(s.id)}
             ListHeaderComponent={renderHeader}
             contentContainerStyle={styles.list}
-            ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <SupplyItemRow item={item} onPress={() => router.push(`/supplies/${item.id}`)} />
             )}
           />
         )}
-        <View
-          style={[
-            styles.footer,
-            { borderTopColor: theme.border, backgroundColor: theme.surfaceElevated },
-            footerPad,
-          ]}
-        >
-          <AppButton title="Add supply" onPress={() => router.push('/supplies/add')} />
-        </View>
+        <FabAdd
+          color={theme.suppliesAccent}
+          accessibilityLabel="Add supply"
+          onPress={() => router.push('/supplies/add')}
+        />
       </View>
     </Screen>
   );
@@ -151,19 +132,19 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   heroIconWrap: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  heroTitle: { marginBottom: spacing.sm },
-  heroSub: { lineHeight: 20 },
+  heroTitle: { marginBottom: spacing.xs },
+  heroSub: { lineHeight: 18 },
   sectionLabel: {
     marginBottom: spacing.sm,
     letterSpacing: 0.5,
@@ -175,24 +156,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,
     paddingBottom: scrollBottomInsetAboveFooter,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.md,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

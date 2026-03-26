@@ -26,7 +26,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Ionicons name="home" color={color} size={22} />,
         }}
       />
       <Tabs.Screen
@@ -40,21 +40,21 @@ export default function TabLayout() {
         name="supplies"
         options={{
           title: 'Supplies',
-          tabBarIcon: ({ color, size }) => <Ionicons name="cube" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Ionicons name="cube" color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: ({ color, size }) => <Ionicons name="book" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Ionicons name="book" color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
           title: 'Contacts',
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" color={color} size={size} />,
+          tabBarIcon: ({ color }) => <Ionicons name="people" color={color} size={22} />,
         }}
       />
     </Tabs>

@@ -5,6 +5,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -24,6 +25,7 @@ import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
+import { useContacts } from '@/hooks/useContacts';
 import type { ChecklistItemRow, PlanRow } from '@/types';
 
 export default function PlanDetailScreen() {
@@ -33,12 +35,17 @@ export default function PlanDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
   const { db, ready } = useDatabase();
+  const { contacts } = useContacts();
 
   const [plan, setPlan] = useState<PlanRow | null>(null);
   const [items, setItems] = useState<ChecklistItemRow[]>([]);
   const [title, setTitle] = useState('');
   const [type, setType] = useState('');
   const [summary, setSummary] = useState('');
+  const [planNotes, setPlanNotes] = useState('');
+  const [reviewDate, setReviewDate] = useState('');
+  const [suppliesNeededText, setSuppliesNeededText] = useState('');
+  const [selectedContactIds, setSelectedContactIds] = useState<number[]>([]);
   const [newLine, setNewLine] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -60,6 +67,20 @@ export default function PlanDetailScreen() {
       setTitle(p.title);
       setType(p.type);
       setSummary(p.summary);
+      setPlanNotes(p.planNotes ?? '');
+      setReviewDate(p.reviewDate ?? '');
+      try {
+        const arr = JSON.parse(p.suppliesNeededJson) as string[];
+        setSuppliesNeededText(Array.isArray(arr) ? arr.join('\n') : '');
+      } catch {
+        setSuppliesNeededText('');
+      }
+      try {
+        const ids = JSON.parse(p.contactIdsJson) as number[];
+        setSelectedContactIds(Array.isArray(ids) ? ids : []);
+      } catch {
+        setSelectedContactIds([]);
+      }
     } else {
       setItems([]);
     }
@@ -76,8 +97,26 @@ export default function PlanDetailScreen() {
 
   const saveMeta = async () => {
     if (!db || !plan) return;
-    await Q.updatePlan(db, id, { title: title.trim(), type: type.trim(), summary: summary.trim() });
+    const suppliesLines = suppliesNeededText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    await Q.updatePlan(db, id, {
+      title: title.trim(),
+      type: type.trim(),
+      summary: summary.trim(),
+      planNotes: planNotes.trim(),
+      reviewDate: reviewDate.trim() || null,
+      suppliesNeededJson: JSON.stringify(suppliesLines),
+      contactIdsJson: JSON.stringify(selectedContactIds),
+    });
     await load();
+  };
+
+  const toggleContactId = (cid: number) => {
+    setSelectedContactIds((prev) =>
+      prev.includes(cid) ? prev.filter((x) => x !== cid) : [...prev, cid]
+    );
   };
 
   const addItem = async () => {
@@ -164,7 +203,7 @@ export default function PlanDetailScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.plansMuted }]}>
-              <Ionicons name="map-outline" size={28} color={theme.plansAccent} />
+              <Ionicons name="map-outline" size={22} color={theme.plansAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
               {title.trim() || 'Plan'}
@@ -205,6 +244,76 @@ export default function PlanDetailScreen() {
               style={{ minHeight: 80, textAlignVertical: 'top' }}
             />
             <AppButton title="Save changes" variant="secondary" onPress={() => void saveMeta()} />
+          </AppCard>
+
+          <AppCard
+            style={[
+              styles.block,
+              {
+                borderRadius: radius.lg,
+                borderLeftWidth: 4,
+                borderLeftColor: theme.plansAccent,
+              },
+            ]}
+          >
+            <AppText variant="label" style={[styles.sectionTag, { color: theme.plansAccent }]}>
+              Planning details
+            </AppText>
+            <AppText variant="label" style={{ color: theme.text, marginTop: spacing.sm }}>
+              Notes
+            </AppText>
+            <AppInput
+              value={planNotes}
+              onChangeText={setPlanNotes}
+              multiline
+              placeholder="Context, constraints, who owns this plan"
+              style={{ minHeight: 72, textAlignVertical: 'top' }}
+            />
+            <AppText variant="label" style={styles.label}>
+              Review date (YYYY-MM-DD)
+            </AppText>
+            <AppInput value={reviewDate} onChangeText={setReviewDate} placeholder="Optional" />
+            <AppText variant="label" style={styles.label}>
+              Supplies needed (one per line)
+            </AppText>
+            <AppInput
+              value={suppliesNeededText}
+              onChangeText={setSuppliesNeededText}
+              multiline
+              placeholder={'Water containers\nBattery radio'}
+              style={{ minHeight: 80, textAlignVertical: 'top' }}
+            />
+            <AppText variant="label" style={styles.label}>
+              Contacts for this plan
+            </AppText>
+            {contacts.length === 0 ? (
+              <AppText muted variant="caption">
+                Add contacts in the Contacts tab to link them here.
+              </AppText>
+            ) : (
+              contacts.map((c) => (
+                <Pressable
+                  key={c.id}
+                  onPress={() => toggleContactId(c.id)}
+                  style={({ pressed }) => [
+                    styles.contactPick,
+                    {
+                      borderColor: selectedContactIds.includes(c.id) ? theme.plansAccent : theme.border,
+                      backgroundColor: selectedContactIds.includes(c.id) ? theme.plansMuted : theme.surface,
+                      opacity: pressed ? 0.92 : 1,
+                    },
+                  ]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selectedContactIds.includes(c.id) }}
+                >
+                  <AppText style={{ color: theme.text, flex: 1 }}>{c.name}</AppText>
+                  <AppText variant="caption" style={{ color: theme.textMuted }}>
+                    {selectedContactIds.includes(c.id) ? 'Selected' : 'Tap'}
+                  </AppText>
+                </Pressable>
+              ))
+            )}
+            <AppButton title="Save planning details" variant="secondary" onPress={() => void saveMeta()} />
           </AppCard>
 
           <AppText variant="title" style={[styles.sectionHeading, { color: theme.text }]}>
@@ -279,8 +388,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  block: { marginBottom: spacing.lg },
+  block: { marginBottom: spacing.md },
   sectionTag: { letterSpacing: 0.4, marginBottom: spacing.xs },
-  sectionHeading: { marginTop: spacing.sm, marginBottom: spacing.md },
+  sectionHeading: { marginTop: spacing.xs, marginBottom: spacing.sm },
   label: { marginTop: spacing.md, marginBottom: spacing.xs },
+  contactPick: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    marginBottom: spacing.sm,
+  },
 });

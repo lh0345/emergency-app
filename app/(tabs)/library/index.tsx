@@ -14,6 +14,7 @@ import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { useGuides } from '@/hooks/useGuides';
+import type { LibraryGroup } from '@/types';
 
 export default function LibraryListScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -22,7 +23,12 @@ export default function LibraryListScreen() {
   const { ready, error } = useDatabase();
   const [q, setQ] = useState('');
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
-  const { guides, loading, refresh } = useGuides(q.trim() || undefined, bookmarksOnly);
+  const [libraryFilter, setLibraryFilter] = useState<LibraryGroup | 'all'>('all');
+  const { guides, loading, refresh } = useGuides(
+    q.trim() || undefined,
+    bookmarksOnly,
+    libraryFilter
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -48,8 +54,46 @@ export default function LibraryListScreen() {
           Guides
         </AppText>
         <AppText muted variant="caption" style={styles.heroSub}>
-          Short reference guides for outages, evacuation, and safety. Search or filter to saved items.
+          Emergency playbooks plus self-reliance skills — all stored on your device for offline reading.
         </AppText>
+      </View>
+
+      <View style={styles.filterRow}>
+        {(
+          [
+            { id: 'all' as const, label: 'All' },
+            { id: 'emergency' as const, label: 'Emergency' },
+            { id: 'self_reliance' as const, label: 'Self-reliance' },
+          ] as const
+        ).map((opt) => {
+          const selected = libraryFilter === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
+              onPress={() => setLibraryFilter(opt.id)}
+              style={({ pressed }) => [
+                styles.filterChip,
+                {
+                  borderColor: selected ? theme.libraryAccent : theme.border,
+                  backgroundColor: selected ? theme.libraryMuted : theme.surfaceElevated,
+                  opacity: pressed ? 0.9 : 1,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+            >
+              <AppText
+                style={{
+                  color: theme.text,
+                  fontWeight: selected ? '700' : '500',
+                  fontSize: 13,
+                }}
+              >
+                {opt.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
       </View>
 
       <View style={styles.searchRow}>
@@ -86,19 +130,9 @@ export default function LibraryListScreen() {
   );
 
   const renderEmpty = () => (
-    <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.libraryMuted }]}>
-        <Ionicons name="search-outline" size={28} color={theme.libraryAccent} />
-      </View>
-      <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
-        {bookmarksOnly ? 'No saved guides' : 'No guides match'}
-      </AppText>
-      <AppText muted variant="caption" style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }}>
-        {bookmarksOnly
-          ? 'Bookmark guides from a guide’s page to find them here.'
-          : 'Try different words, or clear the search.'}
-      </AppText>
-    </View>
+    <AppText muted variant="caption" style={styles.emptyHint}>
+      {bookmarksOnly ? 'No saved guides' : 'No guides match'}
+    </AppText>
   );
 
   if (!ready || error) {
@@ -157,6 +191,20 @@ const styles = StyleSheet.create({
   },
   heroTitle: { marginBottom: spacing.xs },
   heroSub: { lineHeight: 18 },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    minHeight: minTouchTarget,
+    justifyContent: 'center',
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,16 +225,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: scrollBottomInsetAboveFooter,
   },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
+  emptyHint: {
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

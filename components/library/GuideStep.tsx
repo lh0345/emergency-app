@@ -43,19 +43,19 @@ export function GuideStep({ step, index }: { step: GuideStepType; index: number 
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.md, paddingVertical: spacing.md },
-  row: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+  card: { marginBottom: spacing.sm, paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
   },
-  detail: { marginTop: spacing.xs, lineHeight: 24, fontSize: 16 },
+  detail: { marginTop: spacing.xs, lineHeight: 20, fontSize: 14 },
 });

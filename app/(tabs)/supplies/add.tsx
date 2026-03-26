@@ -7,13 +7,15 @@ import { AppButton } from '@/components/ui/AppButton';
 import { AppInput } from '@/components/ui/AppInput';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
-import { SUPPLY_CATEGORIES } from '@/constants/categories';
+import { SUBCATEGORY_HINTS, SUPPLY_CATEGORIES } from '@/constants/categories';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding } from '@/constants/layout';
 import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useSupplies } from '@/hooks/useSupplies';
-import type { SupplyCategory } from '@/types';
+import type { RestockPriority, SupplyCategory } from '@/types';
+
+const RESTOCK: RestockPriority[] = ['low', 'normal', 'high', 'urgent'];
 
 export default function AddSupplyScreen() {
   const router = useRouter();
@@ -27,6 +29,10 @@ export default function AddSupplyScreen() {
   const [unit, setUnit] = useState('units');
   const [expiryDate, setExpiryDate] = useState('');
   const [location, setLocation] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [dailyUse, setDailyUse] = useState('');
+  const [targetAmount, setTargetAmount] = useState('');
+  const [restockPriority, setRestockPriority] = useState<RestockPriority>('normal');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -34,16 +40,22 @@ export default function AddSupplyScreen() {
     if (!name.trim()) return;
     const q = Number(quantity);
     if (Number.isNaN(q)) return;
+    const du = parseFloat(dailyUse);
+    const ta = parseFloat(targetAmount);
     setSaving(true);
     try {
       await addSupply({
         name: name.trim(),
         category,
+        subcategory: subcategory.trim(),
         quantity: q,
         unit: unit.trim() || 'units',
         expiryDate: expiryDate.trim() || null,
         location: location.trim() || null,
         notes: notes.trim() || null,
+        dailyUse: Number.isFinite(du) ? du : 0,
+        targetAmount: Number.isFinite(ta) ? ta : 0,
+        restockPriority,
       });
       router.back();
     } finally {
@@ -69,15 +81,19 @@ export default function AddSupplyScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.suppliesMuted }]}>
-              <Ionicons name="add-circle-outline" size={28} color={theme.suppliesAccent} />
+              <Ionicons name="add-circle-outline" size={22} color={theme.suppliesAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
               New item
             </AppText>
             <AppText muted variant="caption" style={{ lineHeight: 20 }}>
-              Name and category are required. Expiry and location help you rotate stock.
+              Set daily use and targets to estimate days left and restock urgency.
             </AppText>
           </View>
+
+          <AppText muted variant="caption" style={{ lineHeight: 18, marginBottom: spacing.sm }}>
+            Hints for {category}: {SUBCATEGORY_HINTS[category].join(', ') || '—'}
+          </AppText>
 
           <AppText variant="label" style={{ color: theme.text }}>
             Name
@@ -122,6 +138,61 @@ export default function AddSupplyScreen() {
             Unit
           </AppText>
           <AppInput value={unit} onChangeText={setUnit} placeholder="bottles, cans, days…" />
+
+          <AppText variant="label" style={styles.label}>
+            Subcategory (optional)
+          </AppText>
+          <AppInput value={subcategory} onChangeText={setSubcategory} placeholder="e.g. Stored water" />
+
+          <AppText variant="label" style={styles.label}>
+            Daily use (same unit as quantity)
+          </AppText>
+          <AppInput
+            value={dailyUse}
+            onChangeText={setDailyUse}
+            keyboardType="decimal-pad"
+            placeholder="0 = unknown"
+          />
+
+          <AppText variant="label" style={styles.label}>
+            Target amount
+          </AppText>
+          <AppInput
+            value={targetAmount}
+            onChangeText={setTargetAmount}
+            keyboardType="decimal-pad"
+            placeholder="Goal stock level"
+          />
+
+          <AppText variant="label" style={styles.label}>
+            Restock priority
+          </AppText>
+          <View style={styles.catRow}>
+            {RESTOCK.map((rp) => {
+              const selected = restockPriority === rp;
+              return (
+                <Pressable
+                  key={rp}
+                  onPress={() => setRestockPriority(rp)}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    {
+                      minHeight: minTouchTarget,
+                      borderColor: selected ? theme.suppliesAccent : theme.border,
+                      backgroundColor: selected ? theme.suppliesMuted : 'transparent',
+                      opacity: pressed ? 0.92 : 1,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                >
+                  <AppText style={{ fontSize: 13, color: theme.text, fontWeight: selected ? '600' : '400' }}>
+                    {rp}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <AppText variant="label" style={styles.label}>
             Expiry (YYYY-MM-DD)

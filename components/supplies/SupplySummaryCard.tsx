@@ -14,6 +14,8 @@ const CATEGORY_ICONS: Record<SupplyCategory, keyof typeof Ionicons.glyphMap> = {
   Food: 'restaurant-outline',
   Power: 'flash-outline',
   Medicine: 'medical-outline',
+  'Home resilience': 'home-outline',
+  'Food growing': 'leaf-outline',
   Other: 'cube-outline',
 };
 

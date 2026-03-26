@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { getPlanTemplates } from '@/db/seed';
 
 import { AppButton } from '@/components/ui/AppButton';
 import { AppInput } from '@/components/ui/AppInput';
@@ -9,19 +11,31 @@ import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding } from '@/constants/layout';
-import { radius, spacing } from '@/constants/spacing';
+import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { usePlans } from '@/hooks/usePlans';
 
 export default function NewPlanScreen() {
   const router = useRouter();
-  const { addPlan } = usePlans();
+  const { addPlan, addPlanFromTemplate } = usePlans();
   const scheme = useColorScheme() ?? 'light';
   const theme = getThemeColors(scheme === 'dark');
   const [title, setTitle] = useState('');
   const [type, setType] = useState('Home');
   const [summary, setSummary] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const templates = getPlanTemplates();
+
+  const saveTemplate = async (index: number) => {
+    setSaving(true);
+    try {
+      await addPlanFromTemplate(index);
+      router.back();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const save = async () => {
     if (!title.trim()) return;
@@ -52,16 +66,48 @@ export default function NewPlanScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.plansMuted }]}>
-              <Ionicons name="document-text-outline" size={28} color={theme.plansAccent} />
+              <Ionicons name="document-text-outline" size={22} color={theme.plansAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
               Start a plan
             </AppText>
             <AppText muted variant="caption" style={{ lineHeight: 20 }}>
-              Give it a clear title. You will add checklist steps on the next screen.
+              Use a template for common disruptions, or start blank and build your checklist.
             </AppText>
           </View>
 
+          <AppText variant="label" style={{ color: theme.text }}>
+            Templates
+          </AppText>
+          {templates.map((t, index) => (
+            <Pressable
+              key={t.title}
+              onPress={() => void saveTemplate(index)}
+              style={({ pressed }) => [
+                styles.templateRow,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.surfaceElevated,
+                  opacity: pressed ? 0.92 : 1,
+                  minHeight: minTouchTarget,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Use template ${t.title}`}
+            >
+              <View style={{ flex: 1 }}>
+                <AppText style={{ color: theme.text, fontWeight: '600' }}>{t.title}</AppText>
+                <AppText muted variant="caption" numberOfLines={2} style={{ marginTop: 4 }}>
+                  {t.summary}
+                </AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+            </Pressable>
+          ))}
+
+          <AppText variant="label" style={[styles.label, { marginTop: spacing.lg }]}>
+            Or start blank
+          </AppText>
           <AppText variant="label" style={{ color: theme.text }}>
             Title
           </AppText>
@@ -104,4 +150,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   label: { marginTop: spacing.md, marginBottom: spacing.xs },
+  templateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
 });

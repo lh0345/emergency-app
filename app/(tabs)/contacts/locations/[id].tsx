@@ -151,7 +151,7 @@ export default function SavedLocationDetailScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
-              <Ionicons name="location" size={30} color={theme.contactsAccent} />
+              <Ionicons name="location" size={22} color={theme.contactsAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
               {name.trim() ? name : 'Location'}

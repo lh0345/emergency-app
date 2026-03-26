@@ -18,6 +18,8 @@ const CATEGORY_ICONS: Record<SupplyCategory, keyof typeof Ionicons.glyphMap> = {
   Food: 'restaurant-outline',
   Power: 'flash-outline',
   Medicine: 'medical-outline',
+  'Home resilience': 'home-outline',
+  'Food growing': 'leaf-outline',
   Other: 'cube-outline',
 };
 
@@ -38,6 +40,8 @@ export function SupplyItemRow({
   const expiryWarn = days !== null && days <= 30 && days >= 0;
   const expired = days !== null && days < 0;
   const lowQty = item.quantity <= 1;
+  const belowTarget = item.targetAmount > 0 && item.quantity < item.targetAmount;
+  const daysCover = item.dailyUse > 0 ? Math.round((item.quantity / item.dailyUse) * 10) / 10 : null;
   const cat = toCategory(item.category);
   const icon = CATEGORY_ICONS[cat] ?? 'cube-outline';
 
@@ -70,6 +74,8 @@ export function SupplyItemRow({
             </AppText>
             <AppText muted variant="caption" style={styles.meta}>
               {item.quantity} {item.unit || 'units'}
+              {item.subcategory ? ` · ${item.subcategory}` : ''}
+              {daysCover !== null ? ` · ~${daysCover}d cover` : ''}
               {item.expiryDate ? ` · ${formatDate(item.expiryDate)}` : ''}
             </AppText>
             <View style={styles.badges}>
@@ -78,7 +84,8 @@ export function SupplyItemRow({
                   {item.category}
                 </AppText>
               </View>
-              {lowQty ? <AppBadge text="Low" tone="warning" /> : null}
+              {belowTarget ? <AppBadge text="Below target" tone="warning" /> : null}
+              {lowQty ? <AppBadge text="Low qty" tone="warning" /> : null}
               {expired ? <AppBadge text="Expired" tone="warning" /> : null}
               {expiryWarn && !expired ? <AppBadge text="Soon" tone="neutral" /> : null}
             </View>

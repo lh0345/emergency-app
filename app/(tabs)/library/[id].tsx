@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { GuideStep } from '@/components/library/GuideStep';
@@ -27,6 +27,7 @@ export default function GuideDetailScreen() {
 
   const [guide, setGuide] = useState<GuideRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedGuides, setRelatedGuides] = useState<GuideRow[]>([]);
 
   const load = useCallback(async () => {
     if (!Number.isFinite(id) || id <= 0) {
@@ -49,6 +50,35 @@ export default function GuideDetailScreen() {
       if (ready && db) void load();
     }, [ready, db, load])
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!db || !guide) {
+      setRelatedGuides([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+    let topics: string[] = [];
+    try {
+      topics = JSON.parse(guide.relatedTopicsJson) as string[];
+    } catch {
+      topics = [];
+    }
+    if (topics.length === 0) {
+      setRelatedGuides([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+    void (async () => {
+      const rows = await Q.getGuidesBySlugs(db, topics);
+      if (!cancelled) setRelatedGuides(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [db, guide]);
 
   const toggleBookmark = async () => {
     if (!guide || !db) return;
@@ -93,6 +123,12 @@ export default function GuideDetailScreen() {
   let steps: GuideStepType[] = [];
   let supplies: string[] = [];
   let mistakes: string[] = [];
+  let tags: string[] = [];
+  try {
+    tags = JSON.parse(guide.tagsJson) as string[];
+  } catch {
+    tags = [];
+  }
   try {
     steps = JSON.parse(guide.stepsJson) as GuideStepType[];
   } catch {
@@ -126,7 +162,7 @@ export default function GuideDetailScreen() {
       >
         <View style={styles.heroTop}>
           <View style={[styles.heroIcon, { backgroundColor: theme.libraryMuted }]}>
-            <Ionicons name="book" size={28} color={theme.libraryAccent} />
+            <Ionicons name="book" size={22} color={theme.libraryAccent} />
           </View>
           <View style={[styles.catPill, { backgroundColor: theme.libraryMuted }]}>
             <AppText variant="caption" style={{ color: theme.libraryAccent, fontWeight: '700' }}>
@@ -138,6 +174,19 @@ export default function GuideDetailScreen() {
           {guide.title}
         </AppText>
         <AppText style={{ color: theme.text, lineHeight: 24 }}>{guide.overview}</AppText>
+        <View style={styles.tagRow}>
+          {tags.map((t) => (
+            <View key={t} style={[styles.tagPill, { backgroundColor: theme.libraryMuted }]}>
+              <AppText variant="caption" style={{ color: theme.libraryAccent, fontSize: 12, fontWeight: '600' }}>
+                {t}
+              </AppText>
+            </View>
+          ))}
+          <AppText variant="caption" style={{ color: theme.textMuted }}>
+            {guide.readingTime} min read
+            {guide.offlineReady ? ' · Offline-ready' : ''}
+          </AppText>
+        </View>
       </View>
 
       <Pressable
@@ -171,6 +220,35 @@ export default function GuideDetailScreen() {
       {steps.map((s, i) => (
         <GuideStep key={`${i}-${s.title}`} step={s} index={i} />
       ))}
+
+      {relatedGuides.filter((g) => g.id !== guide.id).length > 0 ? (
+        <>
+          <AppText variant="title" style={[styles.sectionTitle, { color: theme.text }]}>
+            Related guides
+          </AppText>
+          {relatedGuides
+            .filter((g) => g.id !== guide.id)
+            .map((g) => (
+            <Pressable
+              key={g.id}
+              onPress={() => router.push(`/library/${g.id}`)}
+              style={({ pressed }) => [
+                styles.relatedRow,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.surfaceElevated,
+                  opacity: pressed ? 0.9 : 1,
+                  minHeight: minTouchTarget,
+                },
+              ]}
+              accessibilityRole="button"
+            >
+              <AppText style={{ color: theme.text, flex: 1 }}>{g.title}</AppText>
+              <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+            </Pressable>
+          ))}
+        </>
+      ) : null}
 
       {supplies.length > 0 ? (
         <>
@@ -271,6 +349,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radius.sm,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  tagPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
+  relatedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.sm,
   },
   bookmarkRow: {
     flexDirection: 'row',

@@ -12,6 +12,7 @@ import { screenPadding } from '@/constants/layout';
 import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
+import { pickChecklistLinesForScenario } from '@/constants/scenarios';
 import * as Q from '@/db/queries';
 import { useEmergencySessionStore } from '@/store/emergencySessionStore';
 import type { ChecklistItemRow } from '@/types';
@@ -22,6 +23,8 @@ export default function EmergencyChecklistScreen() {
   const router = useRouter();
   const { db, ready } = useDatabase();
   const sessionId = useEmergencySessionStore((s) => s.sessionId);
+  const scenarioId = useEmergencySessionStore((s) => s.scenarioId);
+  const answers = useEmergencySessionStore((s) => s.answers);
   const actions = useEmergencySessionStore((s) => s.actions);
   const reset = useEmergencySessionStore((s) => s.reset);
 
@@ -34,13 +37,16 @@ export default function EmergencyChecklistScreen() {
       return;
     }
     let rows = await Q.listChecklistItems(db, 'emergency', sessionId);
-    if (rows.length === 0 && actions.length) {
-      await Q.replaceEmergencyChecklist(db, sessionId, actions);
+    const fallbackLines = scenarioId
+      ? pickChecklistLinesForScenario(scenarioId, answers)
+      : actions;
+    if (rows.length === 0 && fallbackLines.length) {
+      await Q.replaceEmergencyChecklist(db, sessionId, fallbackLines);
       rows = await Q.listChecklistItems(db, 'emergency', sessionId);
     }
     setItems(rows);
     setLoading(false);
-  }, [db, sessionId, actions]);
+  }, [db, sessionId, actions, scenarioId, answers]);
 
   useEffect(() => {
     if (ready) void load();
@@ -87,7 +93,7 @@ export default function EmergencyChecklistScreen() {
         >
           <View style={styles.heroTop}>
             <View style={[styles.heroIcon, { backgroundColor: theme.emergencyMuted }]}>
-              <Ionicons name="checkbox-outline" size={26} color={theme.accent} />
+              <Ionicons name="checkbox-outline" size={20} color={theme.accent} />
             </View>
             {!loading && total > 0 ? (
               <View style={[styles.pill, { backgroundColor: theme.emergencyMuted }]}>

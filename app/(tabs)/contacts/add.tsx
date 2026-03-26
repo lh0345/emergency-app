@@ -68,7 +68,7 @@ export default function AddContactScreen() {
           ]}
         >
           <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
-            <Ionicons name="person-add" size={28} color={theme.contactsAccent} />
+            <Ionicons name="person-add" size={22} color={theme.contactsAccent} />
           </View>
           <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.sm }}>
             Add a contact

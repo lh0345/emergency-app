@@ -66,7 +66,7 @@ export default function NewSavedLocationScreen() {
             ]}
           >
             <View style={[styles.heroIcon, { backgroundColor: theme.contactsMuted }]}>
-              <Ionicons name="add-circle-outline" size={28} color={theme.contactsAccent} />
+              <Ionicons name="add-circle-outline" size={22} color={theme.contactsAccent} />
             </View>
             <AppText variant="title" style={{ color: theme.text, marginBottom: spacing.xs }}>
               New location

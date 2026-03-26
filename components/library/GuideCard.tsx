@@ -7,7 +7,12 @@ import { AppText } from '@/components/ui/AppText';
 import { useColorScheme } from '@/components/useColorScheme';
 import { getThemeColors } from '@/constants/Colors';
 import { radius, spacing } from '@/constants/spacing';
-import type { GuideRow as GuideRowData } from '@/types';
+import type { GuideRow as GuideRowData, LibraryGroup } from '@/types';
+
+const GROUP_LABEL: Record<LibraryGroup, string> = {
+  emergency: 'Emergency',
+  self_reliance: 'Self-reliance',
+};
 
 export function GuideCard({
   guide,
@@ -51,9 +56,17 @@ export function GuideCard({
             <View style={styles.meta}>
               <View style={[styles.cat, { backgroundColor: theme.libraryMuted }]}>
                 <AppText variant="caption" style={{ color: theme.libraryAccent, fontSize: 12, fontWeight: '600' }}>
-                  {guide.category}
+                  {guide.category} · {GROUP_LABEL[guide.libraryGroup as LibraryGroup]}
                 </AppText>
               </View>
+              <AppText variant="caption" style={{ color: theme.textMuted, fontSize: 12 }}>
+                {guide.readingTime} min
+              </AppText>
+              {guide.offlineReady ? (
+                <AppText variant="caption" style={{ color: theme.textMuted, fontSize: 12 }}>
+                  Offline-ready
+                </AppText>
+              ) : null}
               {guide.bookmarked ? (
                 <View style={styles.saved}>
                   <Ionicons name="bookmark" size={14} color={theme.libraryAccent} />

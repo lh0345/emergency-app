@@ -2,9 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
-import type { GuideRow } from '@/types';
+import type { GuideRow, LibraryGroup } from '@/types';
 
-export function useGuides(query?: string, bookmarkedOnly?: boolean) {
+export function useGuides(
+  query?: string,
+  bookmarkedOnly?: boolean,
+  libraryGroup?: LibraryGroup | 'all'
+) {
   const { db, ready } = useDatabase();
   const [guides, setGuides] = useState<GuideRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,11 +17,11 @@ export function useGuides(query?: string, bookmarkedOnly?: boolean) {
     async (opts?: { silent?: boolean }) => {
       if (!db) return;
       if (!opts?.silent) setLoading(true);
-      const rows = await Q.listGuides(db, query, bookmarkedOnly);
+      const rows = await Q.listGuides(db, query, bookmarkedOnly, libraryGroup);
       setGuides(rows);
       setLoading(false);
     },
-    [db, query, bookmarkedOnly]
+    [db, query, bookmarkedOnly, libraryGroup]
   );
 
   useEffect(() => {

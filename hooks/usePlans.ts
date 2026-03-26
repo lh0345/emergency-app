@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useDatabase } from '@/db/context';
+import { getPlanTemplates } from '@/db/seed';
 import * as Q from '@/db/queries';
 import type { PlanRow } from '@/types';
 
@@ -25,7 +26,16 @@ export function usePlans() {
   }, [ready, db, refresh]);
 
   const addPlan = useCallback(
-    async (input: { title: string; type: string; summary: string }) => {
+    async (input: {
+      title: string;
+      type: string;
+      summary: string;
+      householdProfileId?: number | null;
+      suppliesNeededJson?: string;
+      contactIdsJson?: string;
+      planNotes?: string;
+      reviewDate?: string | null;
+    }) => {
       if (!db) return;
       await Q.insertPlan(db, input);
       await refresh();
@@ -33,8 +43,39 @@ export function usePlans() {
     [db, refresh]
   );
 
+  const addPlanFromTemplate = useCallback(
+    async (templateIndex: number) => {
+      if (!db) return;
+      const templates = getPlanTemplates();
+      const t = templates[templateIndex];
+      if (!t) return;
+      await Q.insertPlanWithChecklist(db, {
+        title: t.title,
+        type: t.type,
+        summary: t.summary,
+        checklist: t.checklist,
+        suppliesNeededJson: JSON.stringify(t.suppliesNeeded),
+        planNotes: t.planNotes,
+      });
+      await refresh();
+    },
+    [db, refresh]
+  );
+
   const updatePlan = useCallback(
-    async (id: number, input: Partial<{ title: string; type: string; summary: string }>) => {
+    async (
+      id: number,
+      input: Partial<{
+        title: string;
+        type: string;
+        summary: string;
+        householdProfileId: number | null;
+        suppliesNeededJson: string;
+        contactIdsJson: string;
+        planNotes: string;
+        reviewDate: string | null;
+      }>
+    ) => {
       if (!db) return;
       await Q.updatePlan(db, id, input);
       await refresh();
@@ -60,5 +101,5 @@ export function usePlans() {
     [db, refresh]
   );
 
-  return { plans, loading, refresh, addPlan, updatePlan, removePlan, duplicatePlan };
+  return { plans, loading, refresh, addPlan, addPlanFromTemplate, updatePlan, removePlan, duplicatePlan };
 }

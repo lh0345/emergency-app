@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
 import { PlanCard } from '@/components/plans/PlanCard';
-import { AppButton } from '@/components/ui/AppButton';
+import { FabAdd } from '@/components/ui/FabAdd';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
@@ -14,7 +14,6 @@ import { radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import { usePlans } from '@/hooks/usePlans';
-import { useTabBarFooterPadding } from '@/hooks/useTabBarFooterPadding';
 
 export default function PlansListScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -22,7 +21,6 @@ export default function PlansListScreen() {
   const router = useRouter();
   const { ready, error } = useDatabase();
   const { plans, loading, duplicatePlan, refresh } = usePlans();
-  const footerPad = useTabBarFooterPadding();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,21 +45,7 @@ export default function PlansListScreen() {
         Preparedness plans
       </AppText>
       <AppText muted variant="caption" style={styles.heroSub}>
-        One plan per scenario — evacuation, stay-home, reunions. Open to edit steps or duplicate to iterate.
-      </AppText>
-    </View>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.plansMuted }]}>
-        <Ionicons name="document-text-outline" size={28} color={theme.plansAccent} />
-      </View>
-      <AppText variant="subtitle" style={{ color: theme.text, textAlign: 'center', marginTop: spacing.md }}>
-        No plans yet
-      </AppText>
-      <AppText muted variant="caption" style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }}>
-        Create a plan for your household — you can add checklist steps on the next screen.
+        Plans for shortages, outages, comms, and shelter — each with checklist, supplies, and review dates.
       </AppText>
     </View>
   );
@@ -87,7 +71,6 @@ export default function PlansListScreen() {
             keyExtractor={(p) => String(p.id)}
             ListHeaderComponent={renderHeader}
             contentContainerStyle={styles.list}
-            ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <PlanCard
@@ -98,15 +81,11 @@ export default function PlansListScreen() {
             )}
           />
         )}
-        <View
-          style={[
-            styles.footer,
-            { borderTopColor: theme.border, backgroundColor: theme.surfaceElevated },
-            footerPad,
-          ]}
-        >
-          <AppButton title="New plan" onPress={() => router.push('/plans/new')} />
-        </View>
+        <FabAdd
+          color={theme.plansAccent}
+          accessibilityLabel="New plan"
+          onPress={() => router.push('/plans/new')}
+        />
       </View>
     </Screen>
   );
@@ -135,24 +114,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding,
     paddingTop: spacing.sm,
     paddingBottom: scrollBottomInsetAboveFooter,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.md,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

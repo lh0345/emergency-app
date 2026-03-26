@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ActionStepCard } from '@/components/emergency/ActionStepCard';
@@ -10,12 +10,13 @@ import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/AppText';
 import { getThemeColors } from '@/constants/Colors';
 import { screenPadding } from '@/constants/layout';
-import { getScenarioById } from '@/constants/scenarios';
+import { getScenarioById, pickChecklistLinesForScenario } from '@/constants/scenarios';
 import { minTouchTarget, radius, spacing } from '@/constants/spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
 import { useEmergencySessionStore } from '@/store/emergencySessionStore';
+import type { GuideRow } from '@/types';
 
 type Step = 'questions' | 'actions';
 
@@ -35,6 +36,25 @@ export default function EmergencyScenarioScreen() {
   const computeActions = useEmergencySessionStore((s) => s.computeActions);
 
   const [step, setStep] = useState<Step>('questions');
+  const [relatedGuides, setRelatedGuides] = useState<GuideRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const slugs = scenario?.relatedGuideSlugs ?? [];
+    if (!db || slugs.length === 0) {
+      setRelatedGuides([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+    void (async () => {
+      const rows = await Q.getGuidesBySlugs(db, slugs);
+      if (!cancelled) setRelatedGuides(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [db, scenario?.relatedGuideSlugs]);
 
   if (!scenario) {
     return (
@@ -54,11 +74,11 @@ export default function EmergencyScenarioScreen() {
     scenario.questions.every((q) => answers[q.id] !== undefined);
 
   const goToChecklist = async () => {
+    const lines = scenarioId ? pickChecklistLinesForScenario(scenarioId, answers) : [];
     if (!db || !sessionId) {
       router.push('/emergency/checklist');
       return;
     }
-    const lines = actions.length ? actions : [];
     await Q.replaceEmergencyChecklist(db, sessionId, lines);
     router.push('/emergency/checklist');
   };
@@ -91,6 +111,45 @@ export default function EmergencyScenarioScreen() {
             ) : null}
         </View>
         </View>
+
+        {relatedGuides.length > 0 ? (
+          <AppCard
+            style={[
+              styles.relatedCard,
+              {
+                borderRadius: radius.lg,
+                borderLeftWidth: 4,
+                borderLeftColor: theme.accent,
+              },
+            ]}
+          >
+            <AppText variant="label" style={[styles.relatedLabel, { color: theme.accent }]}>
+              Related guides (offline)
+            </AppText>
+            {relatedGuides.map((g) => (
+              <Pressable
+                key={g.id}
+                onPress={() => router.push(`/library/${g.id}`)}
+                style={({ pressed }) => [
+                  styles.relatedRow,
+                  { opacity: pressed ? 0.88 : 1, backgroundColor: theme.emergencyMuted },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Open guide ${g.title}`}
+              >
+                <Ionicons name="book-outline" size={18} color={theme.accent} />
+                <AppText style={{ color: theme.text, flex: 1, marginLeft: spacing.sm }}>{g.title}</AppText>
+                <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+              </Pressable>
+            ))}
+          </AppCard>
+        ) : null}
+
+        {scenario.relatedSupplyCategories && scenario.relatedSupplyCategories.length > 0 ? (
+          <AppText muted variant="caption" style={styles.supplyHint}>
+            Supplies to think about: {scenario.relatedSupplyCategories.join(', ')}
+          </AppText>
+        ) : null}
 
         {step === 'questions' ? (
           <>
@@ -160,7 +219,7 @@ export default function EmergencyScenarioScreen() {
         ) : (
           <>
             <View style={styles.actionsHeader}>
-              <Ionicons name="list-circle-outline" size={24} color={theme.accent} />
+              <Ionicons name="list-circle-outline" size={20} color={theme.accent} />
               <AppText variant="subtitle" style={{ color: theme.text, marginLeft: spacing.sm, flex: 1 }}>
                 Top actions
               </AppText>
@@ -226,4 +285,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.xs,
   },
+  relatedCard: { marginBottom: spacing.md, paddingVertical: spacing.sm },
+  relatedLabel: { marginBottom: spacing.sm, letterSpacing: 0.3 },
+  relatedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.xs,
+  },
+  supplyHint: { marginBottom: spacing.md, lineHeight: 18 },
 });

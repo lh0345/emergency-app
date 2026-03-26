@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useDatabase } from '@/db/context';
 import * as Q from '@/db/queries';
-import type { SupplyCategory, SupplyRow } from '@/types';
+import type { RestockPriority, SupplyCategory, SupplyRow } from '@/types';
 
 export function useSupplies() {
   const { db, ready } = useDatabase();
@@ -28,11 +28,15 @@ export function useSupplies() {
     async (input: {
       name: string;
       category: SupplyCategory;
+      subcategory?: string;
       quantity: number;
       unit: string;
       expiryDate: string | null;
       location: string | null;
       notes: string | null;
+      dailyUse?: number;
+      targetAmount?: number;
+      restockPriority?: RestockPriority;
     }) => {
       if (!db) return;
       await Q.insertSupply(db, input);
